@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Courtside Embed</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=Unbounded:wght@600&display=swap');
+
+    :root {
+      --bg: #0b1018;
+      --panel: rgba(15, 22, 34, 0.92);
+      --accent: #00d2ff;
+      --accent-2: #ffb100;
+      --text: #eef3ff;
+      --muted: #93a2b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "Avenir Next", "Futura", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(0,210,255,0.16), transparent 45%),
+        radial-gradient(circle at 85% 20%, rgba(255,177,0,0.14), transparent 40%),
+        linear-gradient(160deg, #0a0f15 0%, #070b11 100%);
+    }
+
+    .wrap {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 14px 16px;
+    }
+
+    .scoreboard {
+      display: grid;
+      gap: 12px;
+    }
+
+    .headline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .match-name {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.04em;
+    }
+
+    .match-status {
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .scores {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      background: rgba(9, 14, 22, 0.6);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .team {
+      display: grid;
+      gap: 4px;
+      justify-items: center;
+    }
+
+    .team-name {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .team-score {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 2rem;
+      color: var(--accent);
+    }
+
+    .period {
+      display: grid;
+      gap: 6px;
+      justify-items: center;
+    }
+
+    .period-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+    }
+
+    .period-value {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 1.2rem;
+      color: var(--accent-2);
+    }
+
+    .events-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .events-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .event {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(9, 14, 22, 0.55);
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+
+    .event .meta {
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 620px) {
+      .scores {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="panel scoreboard">
+      <div class="headline">
+        <div class="match-name" id="matchName">No active match</div>
+        <div class="match-status" id="matchStatus">Waiting for session</div>
+      </div>
+      <div class="scores">
+        <div class="team">
+          <div class="team-name" id="homeName">Home</div>
+          <div class="team-score" id="homeScore">0</div>
+        </div>
+        <div class="period">
+          <div class="period-label">Period</div>
+          <div class="period-value" id="periodValue">-</div>
+        </div>
+        <div class="team">
+          <div class="team-name" id="awayName">Away</div>
+          <div class="team-score" id="awayScore">0</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="events-title">Recent Events</div>
+      <div class="events-list" id="eventsList"></div>
+    </section>
+  </div>
+
+  <script>
+    const matchNameEl = document.getElementById('matchName');
+    const matchStatusEl = document.getElementById('matchStatus');
+    const homeNameEl = document.getElementById('homeName');
+    const awayNameEl = document.getElementById('awayName');
+    const homeScoreEl = document.getElementById('homeScore');
+    const awayScoreEl = document.getElementById('awayScore');
+    const periodValueEl = document.getElementById('periodValue');
+    const eventsListEl = document.getElementById('eventsList');
+
+    const params = new URLSearchParams(window.location.search);
+    const limit = Math.max(1, Number.parseInt(params.get('limit') || '12', 10) || 12);
+    const pollMs = Math.max(1000, Number.parseInt(params.get('poll') || '3000', 10) || 3000);
+
+    let session = null;
+
+    function formatPeriod(value) {
+      if (!value) return '-';
+      const key = String(value).toLowerCase();
+      if (key === 'ot') return 'OT';
+      if (key === 'q1') return 'Q1';
+      if (key === 'q2') return 'Q2';
+      if (key === 'q3') return 'Q3';
+      if (key === 'q4') return 'Q4';
+      return String(value).toUpperCase();
+    }
+
+    function setEmptyState(message) {
+      eventsListEl.innerHTML = '';
+      const row = document.createElement('div');
+      row.className = 'empty';
+      row.textContent = message;
+      eventsListEl.appendChild(row);
+    }
+
+    async function getJson(url) {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) {
+        return null;
+      }
+      return res.json();
+    }
+
+    function renderEvents(events) {
+      eventsListEl.innerHTML = '';
+      if (!events || events.length === 0) {
+        setEmptyState('No events yet.');
+        return;
+      }
+      const slice = events.slice(-limit).reverse();
+      slice.forEach(event => {
+        const row = document.createElement('div');
+        row.className = 'event';
+        const label = event.event_type === 'score' ? `+${event.points}` : 'Foul';
+        const jersey = event.player_jersey ? `#${event.player_jersey}` : '#?';
+        const name = event.player_name || 'Unknown';
+        const text = document.createElement('div');
+        text.textContent = `${name} ${jersey} ${label}`;
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.textContent = formatPeriod(event.period);
+        row.appendChild(text);
+        row.appendChild(meta);
+        eventsListEl.appendChild(row);
+      });
+    }
+
+    function updateScores(stats) {
+      if (!stats) return;
+      homeScoreEl.textContent = stats.home_score ?? 0;
+      awayScoreEl.textContent = stats.away_score ?? 0;
+    }
+
+    function updateSession(sessionData) {
+      if (!sessionData || Object.keys(sessionData).length === 0) {
+        session = null;
+        matchNameEl.textContent = 'No active match';
+        matchStatusEl.textContent = 'Waiting for session';
+        homeNameEl.textContent = 'Home';
+        awayNameEl.textContent = 'Away';
+        periodValueEl.textContent = '-';
+        setEmptyState('Start a match from the main console.');
+        return false;
+      }
+      session = sessionData;
+      matchNameEl.textContent = session.match_name || 'Live match';
+      matchStatusEl.textContent = 'Live';
+      homeNameEl.textContent = session.home_team_name || session.home_team_id || 'Home';
+      awayNameEl.textContent = session.away_team_name || session.away_team_id || 'Away';
+      return true;
+    }
+
+    function updatePeriodFromEvents(events) {
+      if (!events || events.length === 0) {
+        periodValueEl.textContent = '-';
+        return;
+      }
+      const last = events[events.length - 1];
+      periodValueEl.textContent = formatPeriod(last?.period);
+    }
+
+    async function refresh() {
+      const sessionResp = await getJson('/api/session');
+      const sessionOk = updateSession(sessionResp?.session);
+      if (!sessionOk) return;
+      const [statsResp, eventsResp] = await Promise.all([
+        getJson('/api/stats'),
+        getJson('/api/events')
+      ]);
+      updateScores(statsResp);
+      const events = eventsResp?.events || [];
+      updatePeriodFromEvents(events);
+      renderEvents(events);
+      matchStatusEl.textContent = `Live | Updated ${new Date().toLocaleTimeString()}`;
+    }
+
+    refresh();
+    setInterval(refresh, pollMs);
+  </script>
+</body>
+</html>

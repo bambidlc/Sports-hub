@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Courtside Stats</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Unbounded:wght@500;700&display=swap');
+
+    :root {
+      --bg: #0a0f15;
+      --panel: #111826;
+      --panel-2: #0c121d;
+      --accent: #ffb100;
+      --accent-2: #00d2ff;
+      --text: #eef3ff;
+      --muted: #96a6bb;
+      --danger: #ff5d5d;
+      --shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "Avenir Next", "Futura", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(0,210,255,0.15), transparent 45%),
+        radial-gradient(circle at 90% 10%, rgba(255,177,0,0.18), transparent 40%),
+        linear-gradient(160deg, #0a0f15 0%, #070b11 100%);
+      min-height: 100vh;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: minmax(260px, 320px) 1fr minmax(260px, 340px);
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, rgba(17,24,38,0.95), rgba(10,14,22,0.92));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      animation: fadeIn 0.6s ease;
+    }
+
+    .title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+
+    .match-select {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    select, button {
+      font-family: inherit;
+    }
+
+    select {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    .primary {
+      background: linear-gradient(120deg, var(--accent), #ff7a00);
+      color: #0b0f14;
+      box-shadow: 0 12px 24px rgba(255,177,0,0.3);
+    }
+
+    .secondary {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+    }
+
+    .danger {
+      background: rgba(255,93,93,0.15);
+      color: var(--danger);
+      border: 1px solid rgba(255,93,93,0.4);
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .scoreboard {
+      display: grid;
+      gap: 12px;
+    }
+
+    .score-banner {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 10px;
+      background: rgba(10,16,26,0.7);
+      border-radius: 16px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .team-block {
+      display: grid;
+      gap: 6px;
+      justify-items: center;
+    }
+
+    .team-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+    }
+
+    .team-id {
+      font-size: 0.75rem;
+      color: var(--muted);
+      word-break: break-all;
+      text-align: center;
+    }
+
+    .score {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 2.2rem;
+      letter-spacing: 0.08em;
+    }
+
+    .clock {
+      display: grid;
+      gap: 8px;
+      justify-items: center;
+    }
+
+    .clock-time {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 1.6rem;
+      color: var(--accent-2);
+    }
+
+    .clock-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .periods {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .periods button.active {
+      background: var(--accent-2);
+      color: #0b0f14;
+      box-shadow: 0 10px 22px rgba(0,210,255,0.35);
+    }
+
+    .score-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .score-actions button {
+      padding: 14px 0;
+      font-size: 1.05rem;
+    }
+
+    .score-actions button.score {
+      background: rgba(0,210,255,0.18);
+      color: var(--accent-2);
+    }
+
+    .score-actions button.foul {
+      background: rgba(255,93,93,0.2);
+      color: var(--danger);
+    }
+
+    .team-section {
+      display: grid;
+      gap: 10px;
+    }
+
+    .team-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      margin-top: 8px;
+    }
+
+    .players-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 12px;
+    }
+
+    .player-tile {
+      background: rgba(9, 14, 22, 0.7);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      justify-items: center;
+      cursor: pointer;
+      transition: transform 0.12s ease, border 0.12s ease;
+    }
+
+    .player-tile.selected {
+      border-color: var(--accent-2);
+      box-shadow: 0 0 0 1px rgba(0,210,255,0.6);
+      transform: translateY(-2px);
+    }
+
+    .jersey-box {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 12px;
+      background: linear-gradient(140deg, rgba(0,210,255,0.25), rgba(255,177,0,0.2));
+      display: grid;
+      place-items: center;
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 2rem;
+      letter-spacing: 0.08em;
+      color: var(--text);
+    }
+
+    .player-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .player-stats {
+      font-size: 0.8rem;
+      color: var(--accent-2);
+    }
+
+    .log {
+      max-height: 70vh;
+      overflow-y: auto;
+      display: grid;
+      gap: 8px;
+      font-size: 0.85rem;
+    }
+
+    .log-entry {
+      border-left: 3px solid rgba(0,210,255,0.5);
+      padding-left: 8px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .log-entry button {
+      background: rgba(255,255,255,0.08);
+      color: var(--muted);
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+      .log {
+        max-height: 40vh;
+      }
+      .score-banner {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="panel">
+      <h2 class="title">Match Setup</h2>
+      <div class="match-select">
+        <select id="matchSelect"></select>
+        <button class="primary" id="startBtn">Start Game</button>
+        <div class="status" id="statusText">Select a match to begin.</div>
+      </div>
+      <hr style="border-color: rgba(255,255,255,0.1); margin: 16px 0;">
+      <div class="clock">
+        <div class="clock-time" id="clockTime">00:00</div>
+        <div class="clock-controls">
+          <button class="secondary" id="clockStart">Start</button>
+          <button class="secondary" id="clockPause">Pause</button>
+          <button class="secondary" id="clockReset">Reset</button>
+        </div>
+      </div>
+      <hr style="border-color: rgba(255,255,255,0.1); margin: 16px 0;">
+      <button class="danger" id="clearLogBtn" disabled>Clear All Events</button>
+      <button class="danger" id="finalizeBtn" disabled>Finalize and Update CSV</button>
+    </section>
+
+    <section class="panel">
+      <h2 class="title">Live Stats</h2>
+      <div class="scoreboard">
+        <div class="score-banner">
+          <div class="team-block">
+            <div class="team-label">Home</div>
+            <div class="score" id="homeScore">0</div>
+            <div class="team-id" id="homeTeamId">-</div>
+          </div>
+          <div class="team-block">
+            <div class="team-label">Period</div>
+            <div class="score" id="currentPeriod">Q1</div>
+          </div>
+          <div class="team-block">
+            <div class="team-label">Away</div>
+            <div class="score" id="awayScore">0</div>
+            <div class="team-id" id="awayTeamId">-</div>
+          </div>
+        </div>
+        <div class="periods" id="periodButtons"></div>
+        <div class="score-actions" id="scoreActions">
+          <button class="score" data-points="1">+1</button>
+          <button class="score" data-points="2">+2</button>
+          <button class="score" data-points="3">+3</button>
+          <button class="foul" data-foul="1">Foul</button>
+        </div>
+        <div class="team-section">
+          <div class="team-header" id="homeTeamHeader">Home</div>
+          <div class="players-grid" id="homePlayers"></div>
+        </div>
+        <div class="team-section">
+          <div class="team-header" id="awayTeamHeader">Away</div>
+          <div class="players-grid" id="awayPlayers"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 class="title">Event Feed</h2>
+      <div class="log" id="eventLog"></div>
+    </section>
+  </div>
+
+  <script>
+    const matchSelect = document.getElementById('matchSelect');
+    const startBtn = document.getElementById('startBtn');
+    const finalizeBtn = document.getElementById('finalizeBtn');
+    const clearLogBtn = document.getElementById('clearLogBtn');
+    const statusText = document.getElementById('statusText');
+    const homePlayers = document.getElementById('homePlayers');
+    const awayPlayers = document.getElementById('awayPlayers');
+    const homeTeamHeader = document.getElementById('homeTeamHeader');
+    const awayTeamHeader = document.getElementById('awayTeamHeader');
+    const eventLog = document.getElementById('eventLog');
+    const periodButtons = document.getElementById('periodButtons');
+    const homeScoreEl = document.getElementById('homeScore');
+    const awayScoreEl = document.getElementById('awayScore');
+    const homeTeamIdEl = document.getElementById('homeTeamId');
+    const awayTeamIdEl = document.getElementById('awayTeamId');
+    const currentPeriodEl = document.getElementById('currentPeriod');
+    const clockTimeEl = document.getElementById('clockTime');
+    const clockStartBtn = document.getElementById('clockStart');
+    const clockPauseBtn = document.getElementById('clockPause');
+    const clockResetBtn = document.getElementById('clockReset');
+    const scoreActions = document.getElementById('scoreActions');
+
+    let currentPeriod = 'q1';
+    let session = null;
+    let timerSeconds = 0;
+    let timerHandle = null;
+    let statsPoll = null;
+    let eventsPoll = null;
+    let selectedPlayer = null;
+
+    const periods = [
+      { key: 'q1', label: 'Q1' },
+      { key: 'q2', label: 'Q2' },
+      { key: 'q3', label: 'Q3' },
+      { key: 'q4', label: 'Q4' },
+      { key: 'ot', label: 'OT' },
+    ];
+
+    function setStatus(text) {
+      statusText.textContent = text;
+    }
+
+    function formatClock(seconds) {
+      const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const secs = (seconds % 60).toString().padStart(2, '0');
+      return `${mins}:${secs}`;
+    }
+
+    function updateClock() {
+      clockTimeEl.textContent = formatClock(timerSeconds);
+    }
+
+    function startClock() {
+      if (timerHandle) return;
+      timerHandle = setInterval(() => {
+        timerSeconds += 1;
+        updateClock();
+      }, 1000);
+    }
+
+    function pauseClock() {
+      if (!timerHandle) return;
+      clearInterval(timerHandle);
+      timerHandle = null;
+    }
+
+    function resetClock() {
+      timerSeconds = 0;
+      updateClock();
+    }
+
+    function createPeriodButtons() {
+      periodButtons.innerHTML = '';
+      periods.forEach(period => {
+        const btn = document.createElement('button');
+        btn.className = 'secondary';
+        btn.textContent = period.label;
+        if (period.key === currentPeriod) {
+          btn.classList.add('active');
+        }
+        btn.addEventListener('click', () => {
+          currentPeriod = period.key;
+          currentPeriodEl.textContent = period.label;
+          createPeriodButtons();
+        });
+        periodButtons.appendChild(btn);
+      });
+    }
+
+    function sumPlayerPoints(stat) {
+      return (stat.q1 || 0) + (stat.q2 || 0) + (stat.q3 || 0) + (stat.q4 || 0) + (stat.ot || 0);
+    }
+
+    function applyStats(stats) {
+      if (!stats) return;
+      homeScoreEl.textContent = stats.home_score ?? 0;
+      awayScoreEl.textContent = stats.away_score ?? 0;
+      if (session) {
+        homeTeamIdEl.textContent = session.home_team_name || session.home_team_id || '-';
+        awayTeamIdEl.textContent = session.away_team_name || session.away_team_id || '-';
+      } else {
+        if (stats.home_team_id) {
+          homeTeamIdEl.textContent = stats.home_team_id;
+        }
+        if (stats.away_team_id) {
+          awayTeamIdEl.textContent = stats.away_team_id;
+        }
+      }
+      if (!session) return;
+      session.players.forEach(player => {
+        const tile = document.querySelector(`[data-player-id="${player.player_id}"]`);
+        if (!tile) return;
+        const stat = stats.player_stats?.[player.player_id] || {};
+        const points = sumPlayerPoints(stat);
+        const fouls = stat.fouls || 0;
+        const statEl = tile.querySelector('.player-stats');
+        statEl.textContent = `PTS ${points} | F ${fouls}`;
+      });
+    }
+
+    function renderEvents(events) {
+      eventLog.innerHTML = '';
+      events.slice().reverse().forEach(event => {
+        const row = document.createElement('div');
+        row.className = 'log-entry';
+        const text = document.createElement('div');
+        const label = event.event_type === 'score' ? `+${event.points}` : 'Foul';
+        const jersey = event.player_jersey ? `#${event.player_jersey}` : '#?';
+        const name = event.player_name || 'Unknown';
+        text.textContent = `${name} ${jersey} ${label} (${String(event.period).toUpperCase()})`;
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Delete';
+        delBtn.addEventListener('click', () => deleteEvent(event.id));
+        row.appendChild(text);
+        row.appendChild(delBtn);
+        eventLog.appendChild(row);
+      });
+    }
+
+    function buildTile(player) {
+      const tile = document.createElement('div');
+      tile.className = 'player-tile';
+      tile.dataset.playerId = player.player_id;
+
+      const jersey = document.createElement('div');
+      jersey.className = 'jersey-box';
+      jersey.textContent = player.jersey || '--';
+
+      const name = document.createElement('div');
+      name.className = 'player-name';
+      name.textContent = player.name || player.player_id;
+
+      const stat = document.createElement('div');
+      stat.className = 'player-stats';
+      stat.textContent = 'PTS 0 | F 0';
+
+      tile.appendChild(jersey);
+      tile.appendChild(name);
+      tile.appendChild(stat);
+
+      tile.addEventListener('click', () => {
+        selectedPlayer = player;
+        document.querySelectorAll('.player-tile').forEach(el => el.classList.remove('selected'));
+        tile.classList.add('selected');
+        setStatus(`Selected: ${player.name} #${player.jersey || '-'}`);
+      });
+
+      return tile;
+    }
+
+    async function loadMatches() {
+      const res = await fetch('/api/matches');
+      const data = await res.json();
+      matchSelect.innerHTML = '';
+      data.matches.forEach(match => {
+        const opt = document.createElement('option');
+        opt.value = match.name;
+        opt.textContent = match.name;
+        matchSelect.appendChild(opt);
+      });
+    }
+
+    async function loadStats() {
+      const res = await fetch('/api/stats');
+      if (!res.ok) return;
+      const data = await res.json();
+      applyStats(data);
+    }
+
+    async function loadEvents() {
+      const res = await fetch('/api/events');
+      if (!res.ok) return;
+      const data = await res.json();
+      renderEvents(data.events || []);
+    }
+
+    async function startGame() {
+      const matchName = matchSelect.value;
+      setStatus('Starting game...');
+      const res = await fetch('/api/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ match_name: matchName })
+      });
+      const data = await res.json();
+      if (data.error) {
+        setStatus(data.error);
+        return;
+      }
+      session = data.session;
+      setStatus(`Live: ${session.match_name}`);
+      finalizeBtn.disabled = false;
+      clearLogBtn.disabled = false;
+      homeTeamIdEl.textContent = session.home_team_name || session.home_team_id || '-';
+      awayTeamIdEl.textContent = session.away_team_name || session.away_team_id || '-';
+      homeTeamHeader.textContent = session.home_team_name || 'Home';
+      awayTeamHeader.textContent = session.away_team_name || 'Away';
+      renderPlayers();
+      loadStats();
+      loadEvents();
+      if (statsPoll) {
+        clearInterval(statsPoll);
+      }
+      if (eventsPoll) {
+        clearInterval(eventsPoll);
+      }
+      statsPoll = setInterval(loadStats, 3000);
+      eventsPoll = setInterval(loadEvents, 3000);
+    }
+
+    function renderPlayers() {
+      homePlayers.innerHTML = '';
+      awayPlayers.innerHTML = '';
+      selectedPlayer = null;
+      session.players.forEach(player => {
+        const tile = buildTile(player);
+        if (player.team_id && player.team_id === session.home_team_id) {
+          homePlayers.appendChild(tile);
+        } else if (player.team_id && player.team_id === session.away_team_id) {
+          awayPlayers.appendChild(tile);
+        } else {
+          homePlayers.appendChild(tile);
+        }
+      });
+    }
+
+    async function recordEvent(eventType, points) {
+      if (!selectedPlayer) {
+        setStatus('Select a player first.');
+        return;
+      }
+      const res = await fetch('/api/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          player_id: selectedPlayer.player_id,
+          event_type: eventType,
+          points,
+          period: currentPeriod
+        })
+      });
+      const data = await res.json();
+      if (data.error) {
+        setStatus(data.error);
+        return;
+      }
+      applyStats(data);
+      loadEvents();
+    }
+
+    async function deleteEvent(id) {
+      await fetch('/api/event/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      loadEvents();
+      loadStats();
+    }
+
+    async function clearEvents() {
+      await fetch('/api/event/clear', { method: 'POST' });
+      loadEvents();
+      loadStats();
+    }
+
+    async function finalizeGame() {
+      setStatus('Finalizing...');
+      const res = await fetch('/api/finalize', { method: 'POST' });
+      const data = await res.json();
+      if (data.error) {
+        setStatus(data.error);
+        return;
+      }
+      setStatus(`CSV updated. Cells updated: ${data.updates}`);
+    }
+
+    startBtn.addEventListener('click', startGame);
+    finalizeBtn.addEventListener('click', finalizeGame);
+    clearLogBtn.addEventListener('click', clearEvents);
+    clockStartBtn.addEventListener('click', startClock);
+    clockPauseBtn.addEventListener('click', pauseClock);
+    clockResetBtn.addEventListener('click', resetClock);
+    scoreActions.addEventListener('click', event => {
+      const points = event.target.dataset.points;
+      const foul = event.target.dataset.foul;
+      if (points) {
+        recordEvent('score', Number(points));
+      } else if (foul) {
+        recordEvent('foul', 0);
+      }
+    });
+
+    createPeriodButtons();
+    updateClock();
+    loadMatches();
+  </script>
+</body>
+</html>

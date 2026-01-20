@@ -1,0 +1,8 @@
+{"game_id":"5","player_id":"__export__.x_player_2_e28bcca2","team_id":"__export__.x_team_8_08925e84","period":"q1","event_type":"score","points":2,"timestamp":"2026-01-15T12:05:00Z"}
+{"game_id":"5","player_id":"__export__.x_player_2_e28bcca2","team_id":"__export__.x_team_8_08925e84","period":"q2","event_type":"score","points":3,"timestamp":"2026-01-15T12:15:00Z"}
+{"game_id":"5","player_id":"__export__.x_player_2_e28bcca2","team_id":"__export__.x_team_8_08925e84","period":"q4","event_type":"foul","timestamp":"2026-01-15T12:45:00Z"}
+{"game_id":"5","player_id":"__export__.x_player_1_e3fcc3ba","team_id":"__export__.x_team_2_144ff876","period":1,"event_type":"score","points":1,"timestamp":"2026-01-15T12:07:00Z"}
+{"game_id":"5","player_id":"__export__.x_player_1_e3fcc3ba","team_id":"__export__.x_team_2_144ff876","period":2,"event_type":"score","points":2,"timestamp":"2026-01-15T12:18:00Z"}
+{"game_id":"5","player_id":"__export__.x_player_1_e3fcc3ba","team_id":"__export__.x_team_2_144ff876","period":3,"event_type":"score","points":3,"timestamp":"2026-01-15T12:28:00Z"}
+{"game_id":"5","player_id":"__export__.x_player_1_e3fcc3ba","team_id":"__export__.x_team_2_144ff876","period":"ot","event_type":"score","points":2,"timestamp":"2026-01-15T12:58:00Z"}
+{"game_id":"5","player_id":"__export__.x_player_1_e3fcc3ba","team_id":"__export__.x_team_2_144ff876","period":"q2","event_type":"foul","timestamp":"2026-01-15T12:20:00Z"}
