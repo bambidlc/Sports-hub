@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -9,12 +10,32 @@ import basketball_stats as bs
 
 BASE_DIR = Path(__file__).parent
 STATIC_DIR = BASE_DIR / "static"
-DATA_DIR = BASE_DIR / "data"
-DATA_DIR.mkdir(exist_ok=True)
 
-MATCHES_CSV = BASE_DIR / "Matches Name.csv"
-PLAYERS_CSV = BASE_DIR / "Player (x_player).csv"
-GAME_CSV = BASE_DIR / "Game (x_game).csv"
+DATA_DIR = Path(os.environ.get("DATA_DIR", str(BASE_DIR / "data")))
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+if "CSV_DIR" in os.environ:
+    CSV_DIR = Path(os.environ["CSV_DIR"])
+elif "DATA_DIR" in os.environ:
+    CSV_DIR = DATA_DIR
+else:
+    CSV_DIR = BASE_DIR
+CSV_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def ensure_seeded_file(filename: str, target_dir: Path) -> Path:
+    target = target_dir / filename
+    if target.exists():
+        return target
+    seed = BASE_DIR / filename
+    if seed.exists():
+        shutil.copy2(seed, target)
+    return target
+
+
+MATCHES_CSV = ensure_seeded_file("Matches Name.csv", CSV_DIR)
+PLAYERS_CSV = ensure_seeded_file("Player (x_player).csv", CSV_DIR)
+GAME_CSV = ensure_seeded_file("Game (x_game).csv", CSV_DIR)
 
 SESSION_PATH = DATA_DIR / "session.json"
 COUNTER_PATH = DATA_DIR / "event_counter.json"
@@ -238,6 +259,15 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _send_file(self, path: Path, content_type: str) -> None:
+        data = path.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Content-Disposition", f'attachment; filename="{path.name}"')
+        self.end_headers()
+        self.wfile.write(data)
+
     def _read_json(self) -> dict:
         length = int(self.headers.get("Content-Length", "0"))
         if length == 0:
@@ -268,6 +298,12 @@ class Handler(BaseHTTPRequestHandler):
                 return
             events = load_events(Path(session["events_path"]))
             self._send_json({"events": enrich_events(events, session)})
+            return
+        if parsed.path == "/export/game.csv":
+            if not GAME_CSV.exists():
+                self._send_json({"error": "Game CSV not found"}, status=404)
+                return
+            self._send_file(GAME_CSV, "text/csv")
             return
         if parsed.path in ["/embed", "/embed/"]:
             embed_path = STATIC_DIR / "iframe.html"
