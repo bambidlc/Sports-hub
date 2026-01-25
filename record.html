@@ -1,0 +1,407 @@
+<t t-name="website_studio.games-1">
+  <t t-call="website.layout">
+    <div id="o_website_record_page wrap" class="game-record-page">
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900');
+        
+        .game-record-page {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          background-color: #f8fafc;
+          min-height: 100vh;
+          color: #1e293b;
+        }
+        
+        /* Hero Banner */
+        .game-record-page .hero-banner {
+          background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+          padding: 4rem 0 8rem;
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .game-record-page .hero-banner::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        /* Breadcrumb */
+        .game-record-page .breadcrumb {
+          background: transparent;
+          padding: 0;
+          margin-bottom: 2rem;
+          position: relative;
+          z-index: 2;
+        }
+        
+        .game-record-page .breadcrumb-item a {
+          color: #94a3b8;
+          text-decoration: none;
+          font-weight: 600;
+          font-size: 0.9rem;
+        }
+        
+        .game-record-page .breadcrumb-item.active {
+          color: #ffffff;
+          font-weight: 700;
+        }
+        
+        .game-record-page .breadcrumb-item + .breadcrumb-item::before {
+          color: #475569;
+          content: "•";
+          padding: 0 1rem;
+        }
+        
+        /* Match Title Header */
+        .game-record-page .match-header {
+          position: relative;
+          z-index: 2;
+        }
+        
+        .game-record-page .match-title {
+          font-size: 3.5rem;
+          font-weight: 900;
+          color: #ffffff;
+          letter-spacing: -0.03em;
+          line-height: 1.1;
+          margin-bottom: 1rem;
+        }
+        
+        .game-record-page .status-badge {
+          font-size: 0.8rem;
+          font-weight: 800;
+          padding: 0.6rem 1.5rem;
+          border-radius: 12px;
+          text-transform: uppercase;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .game-record-page .status-scheduled { background: #ffffff; color: #1d4ed8; }
+        .game-record-page .status-played { background: #ffffff; color: #15803d; }
+        .game-record-page .status-live { background: #ef4444; color: #ffffff; }
+        
+        /* Main Content Container */
+        .game-record-page .content-wrapper {
+          padding-bottom: 6rem;
+        }
+        
+        /* Matchup Card */
+        .game-record-page .matchup-card {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 32px;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+          margin-top: -5rem;
+          position: relative;
+          z-index: 10;
+        }
+        
+        /* Teams Section */
+        .game-record-page .teams-section {
+          padding: 4rem 2rem;
+          border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .game-record-page .team-logo {
+          width: 100px;
+          height: 100px;
+          background: #f8fafc;
+          border-radius: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 1.5rem;
+          font-size: 2.5rem;
+          font-weight: 900;
+          color: #0f172a;
+          border: 2px solid #e2e8f0;
+        }
+        
+        .game-record-page .team-name {
+          font-weight: 800;
+          font-size: 1.5rem;
+          color: #0f172a;
+          margin-bottom: 0.5rem;
+        }
+        
+        .game-record-page .team-label {
+          font-size: 0.75rem;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: #94a3b8;
+        }
+        
+        /* Score Display */
+        .game-record-page .score-display {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 2rem;
+        }
+        
+        .game-record-page .score-number {
+          font-size: 5rem;
+          font-weight: 900;
+          color: #0f172a;
+          line-height: 1;
+        }
+        
+        .game-record-page .score-divider {
+          font-size: 3rem;
+          font-weight: 300;
+          color: #e2e8f0;
+        }
+        
+        .game-record-page .vs-display {
+          background: #f8fafc;
+          border: 2px solid #e2e8f0;
+          border-radius: 20px;
+          padding: 1rem 2rem;
+        }
+        
+        .game-record-page .vs-label {
+          font-size: 1.25rem;
+          font-weight: 900;
+          letter-spacing: 0.2em;
+          color: #94a3b8;
+        }
+        
+        /* Match Details Section */
+        .game-record-page .details-section {
+          background: #f8fafc;
+          padding: 3rem 2rem;
+        }
+        
+        .game-record-page .detail-item {
+          text-align: center;
+        }
+        
+        .game-record-page .detail-icon {
+          width: 56px;
+          height: 56px;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 1rem;
+          color: #fb923c;
+          font-size: 1.25rem;
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        
+        .game-record-page .detail-label {
+          font-size: 0.7rem;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: #64748b;
+          margin-bottom: 0.5rem;
+        }
+        
+        .game-record-page .detail-value {
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: #0f172a;
+        }
+        
+        /* Additional Content Section */
+        .game-record-page .content-card {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 24px;
+          padding: 3rem;
+          margin-top: 3rem;
+        }
+
+        .game-record-page .embed-wrap {
+          margin-top: 2rem;
+          border-radius: 20px;
+          overflow: hidden;
+          border: 1px solid #e2e8f0;
+          background: #0f172a;
+        }
+
+        .game-record-page .embed-frame {
+          width: 100%;
+          height: 640px;
+          border: 0;
+          display: block;
+        }
+
+        .game-record-page .content-card h3 {
+          font-size: 1.5rem;
+          font-weight: 800;
+          color: #0f172a;
+          margin-bottom: 1.5rem;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+        
+        .game-record-page .o_website_html {
+          color: #475569;
+          line-height: 1.8;
+          font-size: 1.1rem;
+        }
+        
+        @media (max-width: 768px) {
+          .game-record-page .match-title { font-size: 2.25rem; }
+          .game-record-page .teams-section { padding: 2.5rem 1rem; }
+          .game-record-page .score-number { font-size: 3.5rem; }
+          .game-record-page .team-logo { width: 70px; height: 70px; font-size: 1.75rem; }
+          .game-record-page .content-card { padding: 1.5rem; }
+        }
+      </style>
+      
+      <t t-set="editor_message">Drag building blocks to customize the header of single record pages.</t>
+      <div class="oe_structure oe_empty oe_new" t-att-data-editor-message="editor_message"/>
+      
+      <div class="hero-banner">
+        <div class="container">
+          <ol t-if="listing" class="breadcrumb">
+            <li class="breadcrumb-item o_not_editable">
+              <a t-att-href="listing['href']">
+                <i class="fa fa-chevron-left me-2"/>
+                <span t-out="listing['name']"/>
+              </a>
+            </li>
+            <li class="breadcrumb-item active">Match Details</li>
+          </ol>
+          
+          <div class="match-header">
+            <div class="d-flex flex-wrap align-items-end justify-content-between gap-4">
+              <div>
+                <h1 class="match-title">
+                  <t t-if="record.x_studio_match_name">
+                    <span t-field="record.x_studio_match_name"/>
+                  </t>
+                  <t t-else="">
+                    <span t-field="record.x_name"/>
+                  </t>
+                </h1>
+                <div class="d-flex gap-3">
+                  <t t-if="record.x_studio_week">
+                    <span style="color: #fb923c; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.9rem;">
+                      Week <span t-field="record.x_studio_week"/>
+                    </span>
+                  </t>
+                </div>
+              </div>
+              <div>
+                <t t-set="status_text" t-value="str(record.x_studio_status or '').lower()"/>
+                <t t-set="status_class" t-value="'status-played' if 'play' in status_text or 'finish' in status_text or 'complete' in status_text else ('status-live' if 'live' in status_text or 'progress' in status_text else 'status-scheduled')"/>
+                <span t-if="record.x_studio_status" t-attf-class="status-badge #{status_class}">
+                  <i class="fa fa-circle"/>
+                  <span t-field="record.x_studio_status"/>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="content-wrapper">
+        <div class="container">
+          <div class="matchup-card">
+            <div class="teams-section">
+              <div class="row align-items-center text-center">
+                <div class="col-md-4">
+                  <div class="team-logo">
+                    <t t-set="home_initial" t-value="str(record.x_studio_home_team.display_name or 'H')[0].upper() if record.x_studio_home_team else 'H'"/>
+                    <span t-esc="home_initial"/>
+                  </div>
+                  <div class="team-name"><span t-field="record.x_studio_home_team"/></div>
+                  <div class="team-label">Home Team</div>
+                </div>
+                
+                <div class="col-md-4 my-5 my-md-0">
+                  <t t-set="show_scores" t-value="record.x_studio_home_score or record.x_studio_away_score"/>
+                  <t t-if="show_scores">
+                    <div class="score-display">
+                      <span class="score-number"><span t-field="record.x_studio_home_score"/></span>
+                      <span class="score-divider">:</span>
+                      <span class="score-number"><span t-field="record.x_studio_away_score"/></span>
+                    </div>
+                    <div class="mt-3"><span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">Final Score</span></div>
+                  </t>
+                  <t t-else="">
+                    <div class="vs-display">VS</div>
+                  </t>
+                </div>
+                
+                <div class="col-md-4">
+                  <div class="team-logo">
+                    <t t-set="away_initial" t-value="str(record.x_studio_away_team.display_name or 'A')[0].upper() if record.x_studio_away_team else 'A'"/>
+                    <span t-esc="away_initial"/>
+                  </div>
+                  <div class="team-name"><span t-field="record.x_studio_away_team"/></div>
+                  <div class="team-label">Away Team</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="details-section">
+              <div class="row g-4">
+                <div class="col-6 col-md-3">
+                  <div class="detail-item">
+                    <div class="detail-icon"><i class="fa fa-calendar"/></div>
+                    <div class="detail-label">Date</div>
+                    <div class="detail-value"><span t-field="record.x_studio_datetime" t-options="{'widget': 'datetime', 'format': 'MMM d, yyyy'}"/></div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="detail-item">
+                    <div class="detail-icon"><i class="fa fa-clock-o"/></div>
+                    <div class="detail-label">Time</div>
+                    <div class="detail-value"><span t-field="record.x_studio_datetime" t-options="{'widget': 'datetime', 'format': 'h:mm a'}"/></div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="detail-item">
+                    <div class="detail-icon"><i class="fa fa-map-marker"/></div>
+                    <div class="detail-label">Location</div>
+                    <div class="detail-value"><span t-field="record.x_studio_location"/></div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="detail-item">
+                    <div class="detail-icon"><i class="fa fa-trophy"/></div>
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value"><span t-field="record.x_studio_status"/></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="content-card">
+            <h3><i class="fa fa-file-text-o" style="color: #fb923c;"/> Match Description</h3>
+            <div class="o_website_html" t-field="record.x_studio_website_description" data-editor-message="Drag building blocks to edit the website description of this record."/>
+            <div class="embed-wrap">
+              <iframe
+                class="embed-frame"
+                src="https://basketball-stats-pcwx.onrender.com/embed"
+                loading="lazy"
+                allow="fullscreen">
+              </iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <t t-set="editor_message">Drag building blocks to customize the footer of single record pages.</t>
+      <div class="oe_structure oe_empty oe_new" t-att-data-editor-message="editor_message"/>
+    </div>
+  </t>
+</t>

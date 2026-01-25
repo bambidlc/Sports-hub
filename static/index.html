@@ -169,6 +169,52 @@
       justify-content: center;
     }
 
+    .clock-settings {
+      display: grid;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .clock-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+    }
+
+    .clock-presets {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .clock-presets button.active {
+      background: var(--accent);
+      color: #0b0f14;
+      box-shadow: 0 10px 22px rgba(255,177,0,0.35);
+    }
+
+    .clock-custom {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .clock-custom input {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 0.95rem;
+      width: 90px;
+    }
+
+    .clock-custom input:focus {
+      outline: 2px solid rgba(0,210,255,0.35);
+      outline-offset: 2px;
+    }
+
     .periods {
       display: flex;
       gap: 8px;
@@ -328,6 +374,17 @@
           <button class="secondary" id="clockPause">Pause</button>
           <button class="secondary" id="clockReset">Reset</button>
         </div>
+        <div class="clock-settings">
+          <div class="clock-label">Period Length</div>
+          <div class="clock-presets">
+            <button class="secondary active" data-clock-preset data-minutes="8" id="presetYouth">Youth 8:00</button>
+            <button class="secondary" data-clock-preset data-minutes="12" id="presetPro">Pro 12:00</button>
+          </div>
+          <div class="clock-custom">
+            <input type="number" id="clockMinutes" min="1" max="20" value="8">
+            <button class="secondary" id="clockSetBtn">Set</button>
+          </div>
+        </div>
       </div>
       <hr style="border-color: rgba(255,255,255,0.1); margin: 16px 0;">
       <button class="danger" id="clearLogBtn" disabled>Clear All Events</button>
@@ -398,11 +455,15 @@
     const clockStartBtn = document.getElementById('clockStart');
     const clockPauseBtn = document.getElementById('clockPause');
     const clockResetBtn = document.getElementById('clockReset');
+    const clockMinutesInput = document.getElementById('clockMinutes');
+    const clockSetBtn = document.getElementById('clockSetBtn');
+    const clockPresetButtons = document.querySelectorAll('[data-clock-preset]');
     const scoreActions = document.getElementById('scoreActions');
 
     let currentPeriod = 'q1';
     let session = null;
-    let timerSeconds = 0;
+    let timerDuration = 8 * 60;
+    let timerSeconds = timerDuration;
     let timerHandle = null;
     let statsPoll = null;
     let eventsPoll = null;
@@ -432,8 +493,18 @@
 
     function startClock() {
       if (timerHandle) return;
+      if (timerSeconds <= 0) {
+        timerSeconds = timerDuration;
+        updateClock();
+      }
       timerHandle = setInterval(() => {
-        timerSeconds += 1;
+        timerSeconds -= 1;
+        if (timerSeconds <= 0) {
+          timerSeconds = 0;
+          updateClock();
+          pauseClock();
+          return;
+        }
         updateClock();
       }, 1000);
     }
@@ -445,8 +516,23 @@
     }
 
     function resetClock() {
-      timerSeconds = 0;
+      timerSeconds = timerDuration;
       updateClock();
+    }
+
+    function setClockDuration(minutes) {
+      const safeMinutes = Math.max(1, Math.min(20, Number.parseInt(minutes, 10) || 1));
+      pauseClock();
+      timerDuration = safeMinutes * 60;
+      timerSeconds = timerDuration;
+      updateClock();
+      if (clockMinutesInput) {
+        clockMinutesInput.value = safeMinutes;
+      }
+      clockPresetButtons.forEach(btn => {
+        const btnMinutes = Number.parseInt(btn.dataset.minutes, 10);
+        btn.classList.toggle('active', btnMinutes === safeMinutes);
+      });
     }
 
     function createPeriodButtons() {
@@ -681,6 +767,15 @@
     clockStartBtn.addEventListener('click', startClock);
     clockPauseBtn.addEventListener('click', pauseClock);
     clockResetBtn.addEventListener('click', resetClock);
+    clockPresetButtons.forEach(btn => {
+      btn.addEventListener('click', () => setClockDuration(btn.dataset.minutes));
+    });
+    clockSetBtn.addEventListener('click', () => setClockDuration(clockMinutesInput.value));
+    clockMinutesInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        setClockDuration(clockMinutesInput.value);
+      }
+    });
     scoreActions.addEventListener('click', event => {
       const points = event.target.dataset.points;
       const foul = event.target.dataset.foul;

@@ -1,0 +1,463 @@
+<t t-name="website_studio.games">
+  <t t-call="website.layout">
+    <div class="container-fluid o_website_listing_layout game-schedule-list">
+      <t t-set="age_filter" t-value="request.params.get('age')"/>
+      <t t-set="sex_filter" t-value="request.params.get('sex')"/>
+      <t t-set="date_filter" t-value="request.params.get('date')"/>
+      
+      <!-- Get all possible values for filters from the full recordset -->
+      <t t-set="all_records" t-value="records.env[records._name].search([])"/>
+      <t t-set="age_values" t-value="sorted(set([value for value in all_records.mapped('x_studio_home_team').mapped('x_studio_categoria') if value]))"/>
+      <t t-set="sex_values" t-value="sorted(set([value for value in all_records.mapped('x_studio_home_team').mapped('x_studio_sexo') if value]))"/>
+      
+      <!-- Use Odoo's fields.Datetime.context_timestamp to convert UTC to user timezone -->
+      <t t-set="Datetime" t-value="records.env['ir.qweb.field.datetime']"/>
+      <t t-set="date_values" t-value="sorted(set([records.env['ir.qweb.field.datetime'].record_to_html(rec, 'x_studio_datetime', {'format': 'yyyy-MM-dd'}) for rec in all_records if rec.x_studio_datetime]))"/>
+      
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800');
+        
+        .game-schedule-list {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          background-color: #f8fafc;
+          min-height: 100vh;
+          padding: 0;
+          color: #1e293b;
+        }
+        
+        /* Hero Header Section */
+        .game-schedule-list .hero-header {
+          background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+          padding: 4rem 0 6rem;
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .game-schedule-list .hero-header::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .game-schedule-list .hero-title {
+          font-size: 3rem;
+          font-weight: 800;
+          color: #ffffff;
+          letter-spacing: -0.02em;
+          margin-bottom: 0.75rem;
+          position: relative;
+        }
+        
+        .game-schedule-list .hero-title span {
+          color: #fb923c;
+        }
+        
+        .game-schedule-list .hero-subtitle {
+          font-size: 1.25rem;
+          color: #cbd5e1;
+          font-weight: 400;
+          position: relative;
+        }
+        
+        /* Filter Panel */
+        .game-schedule-list .filter-panel {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 24px;
+          padding: 2rem;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+          position: relative;
+          z-index: 10;
+          margin-top: -3rem;
+        }
+        
+        .game-schedule-list .filter-label {
+          font-size: 0.75rem;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          color: #64748b;
+          margin-bottom: 0.5rem;
+        }
+        
+        .game-schedule-list .form-select {
+          background-color: #f1f5f9;
+          border: 2px solid transparent;
+          border-radius: 12px;
+          color: #1e293b;
+          padding: 0.75rem 1rem;
+          font-size: 0.95rem;
+          font-weight: 600;
+          transition: all 0.2s ease;
+        }
+        
+        .game-schedule-list .form-select:focus {
+          border-color: #fb923c;
+          background-color: #ffffff;
+          box-shadow: 0 0 0 4px rgba(251, 146, 60, 0.1);
+        }
+        
+        .game-schedule-list .filter-submit {
+          background: #0f172a;
+          border: none;
+          border-radius: 12px;
+          color: #ffffff;
+          font-weight: 700;
+          font-size: 0.9rem;
+          letter-spacing: 0.02em;
+          padding: 0.875rem 2rem;
+          transition: all 0.2s ease;
+        }
+        
+        .game-schedule-list .filter-submit:hover {
+          background: #1e293b;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+        }
+        
+        .game-schedule-list .filter-reset {
+          background: #f1f5f9;
+          border: none;
+          border-radius: 12px;
+          color: #64748b;
+          font-weight: 600;
+          padding: 0.875rem 1.25rem;
+          transition: all 0.2s ease;
+        }
+        
+        .game-schedule-list .filter-reset:hover {
+          background: #e2e8f0;
+          color: #1e293b;
+        }
+        
+        /* Content Area */
+        .game-schedule-list .content-area {
+          padding: 4rem 0;
+        }
+        
+        /* Game Cards */
+        .game-schedule-list .game-card {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 24px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          overflow: hidden;
+          height: 100%;
+        }
+        
+        .game-schedule-list .game-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+          border-color: #fb923c;
+        }
+        
+        .game-schedule-list .game-week {
+          font-size: 0.75rem;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          color: #fb923c;
+        }
+        
+        .game-schedule-list .game-title {
+          font-weight: 800;
+          font-size: 1.25rem;
+          color: #0f172a;
+          letter-spacing: -0.02em;
+          line-height: 1.3;
+        }
+        
+        .game-schedule-list .category-badge {
+          background: #fff7ed;
+          border: 1px solid #ffedd5;
+          color: #c2410c;
+          font-size: 0.7rem;
+          font-weight: 700;
+          padding: 0.4rem 0.75rem;
+          border-radius: 8px;
+          text-transform: uppercase;
+        }
+        
+        .game-schedule-list .status-badge {
+          font-size: 0.7rem;
+          font-weight: 800;
+          padding: 0.4rem 0.85rem;
+          border-radius: 10px;
+          text-transform: uppercase;
+        }
+        
+        .game-schedule-list .status-scheduled {
+          background: #eff6ff;
+          color: #1d4ed8;
+        }
+        
+        .game-schedule-list .status-played {
+          background: #f0fdf4;
+          color: #15803d;
+        }
+        
+        .game-schedule-list .status-cancelled {
+          background: #fef2f2;
+          color: #b91c1c;
+        }
+        
+        /* Scoreboard Section */
+        .game-schedule-list .game-scoreboard {
+          background: #f8fafc;
+          border-radius: 20px;
+          padding: 1.5rem;
+          margin: 1.25rem 0;
+          border: 1px solid #f1f5f9;
+        }
+        
+        .game-schedule-list .team-logo {
+          width: 48px;
+          height: 48px;
+          background: #ffffff;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.25rem;
+          font-weight: 800;
+          color: #0f172a;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .game-schedule-list .team-name {
+          font-weight: 700;
+          font-size: 0.95rem;
+          color: #334155;
+          margin-top: 0.5rem;
+        }
+        
+        .game-schedule-list .vs-label {
+          font-size: 0.75rem;
+          font-weight: 900;
+          color: #94a3b8;
+          background: #ffffff;
+          padding: 0.4rem 0.75rem;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+        }
+        
+        /* Game Meta Info */
+        .game-schedule-list .game-meta {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          padding-top: 1.25rem;
+          border-top: 1px solid #f1f5f9;
+        }
+        
+        .game-schedule-list .meta-item {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          color: #64748b;
+          font-size: 0.9rem;
+          font-weight: 500;
+        }
+        
+        .game-schedule-list .meta-item i {
+          color: #fb923c;
+          font-size: 1rem;
+          width: 20px;
+          text-align: center;
+        }
+        
+        /* Pagination */
+        .game-schedule-list .pagination .page-link {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          color: #64748b;
+          border-radius: 12px;
+          margin: 0 0.25rem;
+          padding: 0.75rem 1.25rem;
+          font-weight: 600;
+        }
+        
+        .game-schedule-list .pagination .page-item.active .page-link {
+          background: #0f172a;
+          border-color: #0f172a;
+          color: #ffffff;
+        }
+        
+        @media (max-width: 768px) {
+          .game-schedule-list .hero-title { font-size: 2.25rem; }
+          .game-schedule-list .filter-panel { padding: 1.5rem; }
+        }
+      </style>
+      
+      <div class="oe_structure oe_new"/>
+      
+      <header class="hero-header text-center">
+        <div class="container">
+          <h1 class="hero-title">Game Schedule</h1>
+          <p class="hero-subtitle">Matchups, times, and locations at a glance.</p>
+        </div>
+      </header>
+      
+      <section class="schedule-filters">
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-lg-10">
+              <div class="filter-panel">
+                <form method="get" class="schedule-filter-form">
+                  <div class="row g-3 align-items-end">
+                    <div class="col-lg-3 col-md-6">
+                      <label class="form-label filter-label">Category</label>
+                      <select name="age" class="form-select">
+                        <option value="">All Categories</option>
+                        <t t-foreach="age_values" t-as="age_value">
+                          <option t-att-value="age_value" t-att-selected="age_filter == age_value">
+                            <t t-esc="age_value"/>
+                          </option>
+                        </t>
+                      </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                      <label class="form-label filter-label">Division</label>
+                      <select name="sex" class="form-select">
+                        <option value="">All Divisions</option>
+                        <t t-foreach="sex_values" t-as="sex_value">
+                          <option t-att-value="sex_value" t-att-selected="sex_filter == sex_value">
+                            <t t-esc="sex_value"/>
+                          </option>
+                        </t>
+                      </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                      <label class="form-label filter-label">Game Date</label>
+                      <select name="date" class="form-select">
+                        <option value="">All Dates</option>
+                        <t t-foreach="date_values" t-as="date_val">
+                          <option t-att-value="date_val" t-att-selected="date_filter == date_val">
+                            <t t-esc="date_val"/>
+                          </option>
+                        </t>
+                      </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                      <div class="d-flex gap-2">
+                        <button type="submit" class="btn filter-submit flex-grow-1">Apply Filters</button>
+                        <a href="?" class="btn filter-reset"><i class="fa fa-refresh"/></a>
+                      </div>
+                    </div>
+                  </div>
+                  <input name="order" type="hidden" t-att-value="order_by if order_by else 'name asc'"/>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <section class="content-area">
+        <div class="container">
+          <div t-attf-class="row g-4 #{'o_website_grid' if layout_mode == 'grid' else 'o_website_list'}">
+            <t t-foreach="records" t-as="record">
+              <t t-set="home_team" t-value="record.x_studio_home_team"/>
+              <t t-set="record_age" t-value="home_team and home_team.x_studio_categoria or ''"/>
+              <t t-set="record_sex" t-value="home_team and home_team.x_studio_sexo or ''"/>
+              <!-- Get local date using Odoo's datetime widget with same format as dropdown -->
+              <t t-set="record_local_date" t-value="record.x_studio_datetime and records.env['ir.qweb.field.datetime'].record_to_html(record, 'x_studio_datetime', {'format': 'yyyy-MM-dd'})"/>
+              <t t-set="match_title" t-value="record.x_studio_match_name or record.x_name or ''"/>
+              <t t-set="status_class" t-value="'status-played' if record.x_studio_status and 'play' in str(record.x_studio_status).lower() else ('status-cancelled' if record.x_studio_status and 'cancel' in str(record.x_studio_status).lower() else 'status-scheduled')"/>
+              
+              <!-- Filter by LOCAL date using the same conversion as dropdown -->
+              <t t-if="(not age_filter or age_filter == record_age) and (not sex_filter or sex_filter == record_sex) and (not date_filter or date_filter == record_local_date)">
+                <div t-attf-class="#{'col-xl-4 col-lg-6 col-12' if layout_mode == 'grid' else 'col-12'}">
+                  <a class="o_website_record text-decoration-none d-block card game-card" t-att-href="record_to_url(record)">
+                    <div class="card-body p-4">
+                      <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="game-week">
+                          <t t-if="record.x_studio_week">
+                            Week <span t-field="record.x_studio_week"/>
+                          </t>
+                        </div>
+                        <span t-if="record.x_studio_status" t-attf-class="status-badge #{status_class}">
+                          <span t-field="record.x_studio_status"/>
+                        </span>
+                      </div>
+                      
+                      <h5 class="game-title mb-3">
+                        <span t-esc="match_title"/>
+                      </h5>
+                      
+                      <div class="d-flex flex-wrap gap-2 mb-4">
+                        <t t-if="home_team and home_team.x_studio_categoria">
+                          <span class="category-badge"><span t-field="home_team.x_studio_categoria"/></span>
+                        </t>
+                        <t t-if="home_team and home_team.x_studio_sexo">
+                          <span class="category-badge"><span t-field="home_team.x_studio_sexo"/></span>
+                        </t>
+                      </div>
+                      
+                      <div class="game-scoreboard">
+                        <div class="row align-items-center text-center">
+                          <div class="col-5">
+                            <div class="d-flex flex-column align-items-center">
+                              <div class="team-logo">
+                                <t t-set="home_initial" t-value="str(record.x_studio_home_team.display_name or 'H')[0].upper() if record.x_studio_home_team else 'H'"/>
+                                <span t-esc="home_initial"/>
+                              </div>
+                              <div class="team-name text-truncate w-100">
+                                <span t-field="record.x_studio_home_team"/>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-2">
+                            VS
+                          </div>
+                          <div class="col-5">
+                            <div class="d-flex flex-column align-items-center">
+                              <div class="team-logo">
+                                <t t-set="away_initial" t-value="str(record.x_studio_away_team.display_name or 'A')[0].upper() if record.x_studio_away_team else 'A'"/>
+                                <span t-esc="away_initial"/>
+                              </div>
+                              <div class="team-name text-truncate w-100">
+                                <span t-field="record.x_studio_away_team"/>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="game-meta">
+                        <t t-if="record.x_studio_datetime">
+                          <div class="meta-item">
+                            <i class="fa fa-calendar-check-o"/>
+                            <span t-field="record.x_studio_datetime" t-options="{'widget': 'datetime', 'format': 'MMM d, yyyy - h:mm a'}"/>
+                          </div>
+                        </t>
+                        <t t-if="record.x_studio_location">
+                          <div class="meta-item">
+                            <i class="fa fa-map-marker"/>
+                            <span t-field="record.x_studio_location"/>
+                          </div>
+                        </t>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              </t>
+            </t>
+          </div>
+        </div>
+      </section>
+      
+      <div class="oe_structure oe_new"/>
+      
+      <div t-if="pager" class="o_portal_pager d-flex justify-content-center pb-5">
+        <t t-call="portal.pager"/>
+      </div>
+    </div>
+  </t>
+</t>

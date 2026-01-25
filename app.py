@@ -4,7 +4,8 @@ import shutil
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
+from typing import Optional
+from urllib.parse import parse_qs, urlparse
 
 import basketball_stats as bs
 
@@ -41,14 +42,27 @@ SESSION_PATH = DATA_DIR / "session.json"
 COUNTER_PATH = DATA_DIR / "event_counter.json"
 
 
-def load_session() -> dict:
-    if SESSION_PATH.exists():
-        return json.loads(SESSION_PATH.read_text(encoding="utf-8"))
+def session_path(match_id: str) -> Path:
+    return DATA_DIR / f"session_{match_id}.json"
+
+
+def load_session(match_id: Optional[str] = None) -> dict:
+    target = SESSION_PATH if not match_id else session_path(match_id)
+    if target.exists():
+        return json.loads(target.read_text(encoding="utf-8"))
     return {}
 
 
-def save_session(session: dict) -> None:
-    SESSION_PATH.write_text(json.dumps(session, indent=2), encoding="utf-8")
+def save_session(session: dict, match_id: Optional[str] = None) -> None:
+    target = SESSION_PATH if not match_id else session_path(match_id)
+    target.write_text(json.dumps(session, indent=2), encoding="utf-8")
+
+
+def persist_session(session: dict) -> None:
+    save_session(session)
+    match_id = session.get("match_id")
+    if match_id:
+        save_session(session, match_id)
 
 
 def load_counter() -> int:
@@ -139,8 +153,10 @@ def build_session(match_name: str) -> dict:
         "away_team_name": away_team_name,
         "parent_row_idx": parent_row_idx,
         "players": players,
+        "started_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "finalized_at": None,
     }
-    save_session(session)
+    persist_session(session)
     if not events_path.exists():
         events_path.write_text("", encoding="utf-8")
     return session
@@ -242,6 +258,37 @@ def build_live_stats(session: dict) -> dict:
     }
 
 
+def list_sessions() -> list:
+    sessions = []
+    for path in DATA_DIR.glob("session_*.json"):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        if not data:
+            continue
+        sessions.append(
+            {
+                "match_id": data.get("match_id"),
+                "match_name": data.get("match_name"),
+                "home_team_name": data.get("home_team_name"),
+                "away_team_name": data.get("away_team_name"),
+                "started_at": data.get("started_at"),
+                "finalized_at": data.get("finalized_at"),
+            }
+        )
+    sessions.sort(key=lambda item: item.get("started_at") or "", reverse=True)
+    return sessions
+
+
+def get_match_id_from_query(query: dict) -> Optional[str]:
+    for key in ("match_id", "game_id"):
+        value = query.get(key)
+        if value:
+            return value[0]
+    return None
+
+
 class Handler(BaseHTTPRequestHandler):
     def _send_json(self, data: dict, status: int = 200) -> None:
         payload = json.dumps(data).encode("utf-8")
@@ -277,22 +324,29 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
+        query = parse_qs(parsed.query)
         if parsed.path == "/api/matches":
             matches = load_matches()
             self._send_json({"matches": matches})
             return
+        if parsed.path == "/api/sessions":
+            self._send_json({"sessions": list_sessions()})
+            return
         if parsed.path == "/api/session":
-            self._send_json({"session": load_session()})
+            match_id = get_match_id_from_query(query)
+            self._send_json({"session": load_session(match_id)})
             return
         if parsed.path == "/api/stats":
-            session = load_session()
+            match_id = get_match_id_from_query(query)
+            session = load_session(match_id)
             if not session:
                 self._send_json({"error": "No active session"}, status=400)
                 return
             self._send_json(build_live_stats(session))
             return
         if parsed.path == "/api/events":
-            session = load_session()
+            match_id = get_match_id_from_query(query)
+            session = load_session(match_id)
             if not session:
                 self._send_json({"error": "No active session"}, status=400)
                 return
@@ -399,6 +453,8 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self._send_json({"error": str(exc)}, status=400)
                 return
+            session["finalized_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            persist_session(session)
             self._send_json(result)
             return
         self.send_response(404)

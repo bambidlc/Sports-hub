@@ -3,19 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Courtside Embed</title>
+  <title>Courtside Live Dashboard</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=Unbounded:wght@600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Unbounded:wght@600&display=swap');
 
     :root {
       --bg: #0b1018;
-      --panel: rgba(15, 22, 34, 0.92);
-      --accent: #00d2ff;
-      --accent-2: #ffb100;
+      --panel: rgba(17, 24, 38, 0.92);
+      --panel-strong: rgba(10, 16, 26, 0.98);
+      --accent: #ffb100;
+      --accent-2: #00d2ff;
       --text: #eef3ff;
-      --muted: #93a2b8;
+      --muted: #96a4bb;
       --border: rgba(255, 255, 255, 0.08);
-      --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+      --success: #22c55e;
+      --danger: #ef4444;
     }
 
     * { box-sizing: border-box; }
@@ -24,23 +27,157 @@
       font-family: "Space Grotesk", "Avenir Next", "Futura", sans-serif;
       color: var(--text);
       background:
-        radial-gradient(circle at 15% 0%, rgba(0,210,255,0.16), transparent 45%),
-        radial-gradient(circle at 85% 20%, rgba(255,177,0,0.14), transparent 40%),
-        linear-gradient(160deg, #0a0f15 0%, #070b11 100%);
+        radial-gradient(circle at 10% 0%, rgba(0, 210, 255, 0.18), transparent 50%),
+        radial-gradient(circle at 90% 10%, rgba(255, 177, 0, 0.2), transparent 45%),
+        linear-gradient(150deg, #0b1018 0%, #070b11 100%);
+      min-height: 100vh;
     }
 
-    .wrap {
-      padding: 16px;
+    .shell {
+      padding: 18px;
       display: grid;
-      gap: 12px;
+      gap: 16px;
     }
 
     .panel {
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 18px;
       box-shadow: var(--shadow);
-      padding: 14px 16px;
+      padding: 16px;
+      animation: fadeUp 0.4s ease;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(140deg, rgba(0, 210, 255, 0.4), rgba(255, 177, 0, 0.35));
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.08em;
+    }
+
+    .brand-title {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.05em;
+    }
+
+    .brand-subtitle {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .status-pill.live { background: rgba(0, 210, 255, 0.16); color: var(--accent-2); }
+    .status-pill.final { background: rgba(239, 68, 68, 0.16); color: #fecaca; }
+    .status-pill.idle { background: rgba(255, 255, 255, 0.08); color: var(--muted); }
+
+    .selector {
+      display: grid;
+      gap: 12px;
+      background: var(--panel-strong);
+    }
+
+    .selector-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .eyebrow {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+    }
+
+    .selector-title {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 1.05rem;
+    }
+
+    .selector-controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+
+    select, button {
+      font-family: inherit;
+    }
+
+    select {
+      background: rgba(9, 14, 22, 0.75);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    .primary {
+      background: linear-gradient(120deg, var(--accent), #ff7a00);
+      color: #0b0f14;
+      box-shadow: 0 10px 22px rgba(255, 177, 0, 0.35);
+    }
+
+    .ghost {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+
+    .selector-meta {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
     }
 
     .scoreboard {
@@ -48,7 +185,7 @@
       gap: 12px;
     }
 
-    .headline {
+    .match-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -58,15 +195,18 @@
     .match-name {
       font-family: "Unbounded", "Space Grotesk", sans-serif;
       font-size: 1.1rem;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.03em;
     }
 
     .match-status {
-      color: var(--muted);
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       text-transform: uppercase;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.2em;
+      color: var(--muted);
     }
+
+    .match-status.live { color: var(--accent-2); }
+    .match-status.final { color: #fecaca; }
 
     .scores {
       display: grid;
@@ -128,6 +268,9 @@
     .events-list {
       display: grid;
       gap: 8px;
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 2px;
     }
 
     .event {
@@ -155,40 +298,73 @@
       font-size: 0.85rem;
     }
 
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     @media (max-width: 620px) {
-      .scores {
-        grid-template-columns: 1fr;
-      }
+      .scores { grid-template-columns: 1fr; }
+      .selector-controls { grid-template-columns: 1fr; }
+      .events-list { max-height: 220px; }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <section class="panel scoreboard">
-      <div class="headline">
-        <div class="match-name" id="matchName">No active match</div>
-        <div class="match-status" id="matchStatus">Waiting for session</div>
-      </div>
-      <div class="scores">
-        <div class="team">
-          <div class="team-name" id="homeName">Home</div>
-          <div class="team-score" id="homeScore">0</div>
-        </div>
-        <div class="period">
-          <div class="period-label">Period</div>
-          <div class="period-value" id="periodValue">-</div>
-        </div>
-        <div class="team">
-          <div class="team-name" id="awayName">Away</div>
-          <div class="team-score" id="awayScore">0</div>
+  <div class="shell">
+    <header class="panel topbar">
+      <div class="brand">
+        <div class="logo">CS</div>
+        <div>
+          <div class="brand-title">Courtside Live</div>
+          <div class="brand-subtitle">Match selection and live stats</div>
         </div>
       </div>
+      <div class="status-pill idle" id="globalStatus">Select a match to view live stats</div>
+    </header>
+
+    <section class="panel selector">
+      <div class="selector-head">
+        <div>
+          <div class="eyebrow">Started Games</div>
+          <div class="selector-title">Choose a match</div>
+        </div>
+        <button class="ghost" id="refreshBtn">Refresh</button>
+      </div>
+      <div class="selector-controls">
+        <select id="matchSelect"></select>
+        <button class="primary" id="viewBtn">Activate View</button>
+      </div>
+      <div class="selector-meta" id="matchMeta">Waiting for started matches.</div>
     </section>
 
-    <section class="panel">
-      <div class="events-title">Recent Events</div>
-      <div class="events-list" id="eventsList"></div>
-    </section>
+    <div class="grid">
+      <section class="panel scoreboard">
+        <div class="match-row">
+          <div class="match-name" id="matchName">No active match</div>
+          <div class="match-status" id="matchStatus">Idle</div>
+        </div>
+        <div class="scores">
+          <div class="team">
+            <div class="team-name" id="homeName">Home</div>
+            <div class="team-score" id="homeScore">0</div>
+          </div>
+          <div class="period">
+            <div class="period-label">Period</div>
+            <div class="period-value" id="periodValue">-</div>
+          </div>
+          <div class="team">
+            <div class="team-name" id="awayName">Away</div>
+            <div class="team-score" id="awayScore">0</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="events-title">Recent Events</div>
+        <div class="events-list" id="eventsList"></div>
+      </section>
+    </div>
   </div>
 
   <script>
@@ -200,12 +376,25 @@
     const awayScoreEl = document.getElementById('awayScore');
     const periodValueEl = document.getElementById('periodValue');
     const eventsListEl = document.getElementById('eventsList');
+    const matchSelectEl = document.getElementById('matchSelect');
+    const viewBtn = document.getElementById('viewBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const matchMetaEl = document.getElementById('matchMeta');
+    const globalStatusEl = document.getElementById('globalStatus');
 
     const params = new URLSearchParams(window.location.search);
     const limit = Math.max(1, Number.parseInt(params.get('limit') || '12', 10) || 12);
     const pollMs = Math.max(1000, Number.parseInt(params.get('poll') || '3000', 10) || 3000);
+    let currentMatchId = params.get('match_id') || params.get('match') || '';
 
-    let session = null;
+    let sessions = [];
+    let pollHandle = null;
+
+    function setGlobalStatus(text, state) {
+      globalStatusEl.textContent = text;
+      globalStatusEl.classList.remove('idle', 'live', 'final');
+      globalStatusEl.classList.add(state || 'idle');
+    }
 
     function formatPeriod(value) {
       if (!value) return '-';
@@ -264,22 +453,45 @@
       awayScoreEl.textContent = stats.away_score ?? 0;
     }
 
+    function updateMatchMeta(sessionData) {
+      if (!sessionData) {
+        matchMetaEl.textContent = 'Select a match to view details.';
+        return;
+      }
+      const teams = [sessionData.home_team_name || sessionData.home_team_id, sessionData.away_team_name || sessionData.away_team_id]
+        .filter(Boolean)
+        .join(' vs ');
+      const startedAt = sessionData.started_at ? new Date(sessionData.started_at).toLocaleString() : '';
+      matchMetaEl.textContent = [teams, startedAt].filter(Boolean).join(' | ');
+    }
+
     function updateSession(sessionData) {
       if (!sessionData || Object.keys(sessionData).length === 0) {
-        session = null;
         matchNameEl.textContent = 'No active match';
-        matchStatusEl.textContent = 'Waiting for session';
+        matchStatusEl.textContent = 'Idle';
+        matchStatusEl.classList.remove('live', 'final');
         homeNameEl.textContent = 'Home';
         awayNameEl.textContent = 'Away';
         periodValueEl.textContent = '-';
-        setEmptyState('Start a match from the main console.');
+        updateMatchMeta(null);
+        setEmptyState('Select a started match to view live stats.');
+        setGlobalStatus('Select a match to view live stats', 'idle');
         return false;
       }
-      session = sessionData;
-      matchNameEl.textContent = session.match_name || 'Live match';
-      matchStatusEl.textContent = 'Live';
-      homeNameEl.textContent = session.home_team_name || session.home_team_id || 'Home';
-      awayNameEl.textContent = session.away_team_name || session.away_team_id || 'Away';
+      matchNameEl.textContent = sessionData.match_name || 'Live match';
+      const isFinal = Boolean(sessionData.finalized_at);
+      matchStatusEl.textContent = isFinal ? 'Final' : 'Live';
+      matchStatusEl.classList.toggle('final', isFinal);
+      matchStatusEl.classList.toggle('live', !isFinal);
+      homeNameEl.textContent = sessionData.home_team_name || sessionData.home_team_id || 'Home';
+      awayNameEl.textContent = sessionData.away_team_name || sessionData.away_team_id || 'Away';
+      updateMatchMeta(sessionData);
+      if (isFinal) {
+        const ended = new Date(sessionData.finalized_at).toLocaleTimeString();
+        setGlobalStatus(`Final - ended ${ended}`, 'final');
+      } else {
+        setGlobalStatus('Live - updating stats', 'live');
+      }
       return true;
     }
 
@@ -292,23 +504,101 @@
       periodValueEl.textContent = formatPeriod(last?.period);
     }
 
-    async function refresh() {
-      const sessionResp = await getJson('/api/session');
+    function stopPolling() {
+      if (pollHandle) {
+        clearInterval(pollHandle);
+        pollHandle = null;
+      }
+    }
+
+    async function refresh(matchId) {
+      if (!matchId) return;
+      const sessionResp = await getJson(`/api/session?match_id=${encodeURIComponent(matchId)}`);
       const sessionOk = updateSession(sessionResp?.session);
       if (!sessionOk) return;
       const [statsResp, eventsResp] = await Promise.all([
-        getJson('/api/stats'),
-        getJson('/api/events')
+        getJson(`/api/stats?match_id=${encodeURIComponent(matchId)}`),
+        getJson(`/api/events?match_id=${encodeURIComponent(matchId)}`)
       ]);
       updateScores(statsResp);
       const events = eventsResp?.events || [];
       updatePeriodFromEvents(events);
       renderEvents(events);
-      matchStatusEl.textContent = `Live | Updated ${new Date().toLocaleTimeString()}`;
+      if (sessionResp?.session?.finalized_at) {
+        stopPolling();
+      }
     }
 
-    refresh();
-    setInterval(refresh, pollMs);
+    async function loadSessions() {
+      const data = await getJson('/api/sessions');
+      sessions = data?.sessions || [];
+      matchSelectEl.innerHTML = '';
+      if (sessions.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No started matches yet';
+        matchSelectEl.appendChild(opt);
+        viewBtn.disabled = true;
+        setGlobalStatus('Waiting for a match to start', 'idle');
+        return;
+      }
+      sessions.forEach(session => {
+        const opt = document.createElement('option');
+        opt.value = session.match_id || '';
+        const statusLabel = session.finalized_at ? 'Final' : 'Live';
+        opt.textContent = `${session.match_name || session.match_id} (${statusLabel})`;
+        matchSelectEl.appendChild(opt);
+      });
+      viewBtn.disabled = false;
+      if (currentMatchId) {
+        matchSelectEl.value = currentMatchId;
+      }
+    }
+
+    function setQueryMatch(matchId) {
+      const next = new URL(window.location.href);
+      next.searchParams.set('match_id', matchId);
+      history.replaceState({}, '', next);
+    }
+
+    async function activateMatch(matchId) {
+      if (!matchId) {
+        updateSession(null);
+        stopPolling();
+        return;
+      }
+      currentMatchId = matchId;
+      setQueryMatch(matchId);
+      await refresh(matchId);
+      stopPolling();
+      pollHandle = setInterval(() => refresh(matchId), pollMs);
+    }
+
+    viewBtn.addEventListener('click', () => {
+      activateMatch(matchSelectEl.value);
+    });
+
+    refreshBtn.addEventListener('click', async () => {
+      await loadSessions();
+      if (currentMatchId) {
+        matchSelectEl.value = currentMatchId;
+      }
+    });
+
+    matchSelectEl.addEventListener('change', () => {
+      setGlobalStatus('Ready to activate selected match', 'idle');
+    });
+
+    (async () => {
+      await loadSessions();
+      if (currentMatchId) {
+        await activateMatch(currentMatchId);
+      } else if (sessions.length === 1) {
+        await activateMatch(sessions[0].match_id);
+      } else {
+        updateSession(null);
+      }
+    })();
   </script>
 </body>
 </html>
