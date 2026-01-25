@@ -8,17 +8,17 @@
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Unbounded:wght@600&display=swap');
 
     :root {
-      --bg: #0b1018;
-      --panel: rgba(17, 24, 38, 0.92);
-      --panel-strong: rgba(10, 16, 26, 0.98);
-      --accent: #ffb100;
-      --accent-2: #00d2ff;
-      --text: #eef3ff;
-      --muted: #96a4bb;
-      --border: rgba(255, 255, 255, 0.08);
-      --shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
-      --success: #22c55e;
-      --danger: #ef4444;
+      --bg: #ffffff;
+      --panel: #ffffff;
+      --panel-strong: #ffffff;
+      --accent: #F4AB5D;
+      --accent-2: #F4AB5D;
+      --text: #2c1d12;
+      --muted: rgba(44, 29, 18, 0.6);
+      --border: rgba(244, 171, 93, 0.3);
+      --shadow: 0 16px 32px rgba(244, 171, 93, 0.2);
+      --success: #F4AB5D;
+      --danger: #F4AB5D;
     }
 
     * { box-sizing: border-box; }
@@ -26,10 +26,7 @@
       margin: 0;
       font-family: "Space Grotesk", "Avenir Next", "Futura", sans-serif;
       color: var(--text);
-      background:
-        radial-gradient(circle at 10% 0%, rgba(0, 210, 255, 0.18), transparent 50%),
-        radial-gradient(circle at 90% 10%, rgba(255, 177, 0, 0.2), transparent 45%),
-        linear-gradient(150deg, #0b1018 0%, #070b11 100%);
+      background: linear-gradient(180deg, #ffffff 0%, rgba(244, 171, 93, 0.12) 100%);
       min-height: 100vh;
     }
 
@@ -68,7 +65,7 @@
       border-radius: 14px;
       display: grid;
       place-items: center;
-      background: linear-gradient(140deg, rgba(0, 210, 255, 0.4), rgba(255, 177, 0, 0.35));
+      background: linear-gradient(140deg, rgba(244, 171, 93, 0.9), rgba(255, 255, 255, 0.9));
       font-family: "Unbounded", "Space Grotesk", sans-serif;
       font-size: 1.1rem;
       letter-spacing: 0.08em;
@@ -91,15 +88,16 @@
       gap: 8px;
       padding: 6px 12px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(244, 171, 93, 0.16);
+      border: 1px solid var(--border);
       font-size: 0.8rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
     }
 
-    .status-pill.live { background: rgba(0, 210, 255, 0.16); color: var(--accent-2); }
-    .status-pill.final { background: rgba(239, 68, 68, 0.16); color: #fecaca; }
-    .status-pill.idle { background: rgba(255, 255, 255, 0.08); color: var(--muted); }
+    .status-pill.live { background: rgba(244, 171, 93, 0.25); color: var(--text); }
+    .status-pill.final { background: rgba(244, 171, 93, 0.2); color: var(--text); }
+    .status-pill.idle { background: rgba(244, 171, 93, 0.1); color: var(--muted); }
 
     .selector {
       display: grid;
@@ -138,7 +136,7 @@
     }
 
     select {
-      background: rgba(9, 14, 22, 0.75);
+      background: #ffffff;
       color: var(--text);
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -159,13 +157,14 @@
     button:hover { transform: translateY(-1px); }
 
     .primary {
-      background: linear-gradient(120deg, var(--accent), #ff7a00);
-      color: #0b0f14;
-      box-shadow: 0 10px 22px rgba(255, 177, 0, 0.35);
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 10px 22px rgba(244, 171, 93, 0.35);
     }
 
     .ghost {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(244, 171, 93, 0.12);
+      border: 1px solid var(--border);
       color: var(--text);
     }
 
@@ -206,6 +205,7 @@
     }
 
     .match-status.live { color: var(--accent-2); }
+    .match-status.final { color: var(--accent); }
     .match-status.final { color: #fecaca; }
 
     .scores {
@@ -213,7 +213,7 @@
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
       gap: 12px;
-      background: rgba(9, 14, 22, 0.6);
+      background: rgba(244, 171, 93, 0.12);
       border-radius: 14px;
       padding: 12px;
     }
@@ -281,7 +281,7 @@
       padding: 8px 10px;
       border-radius: 12px;
       border: 1px solid var(--border);
-      background: rgba(9, 14, 22, 0.55);
+      background: rgba(244, 171, 93, 0.08);
       font-size: 0.85rem;
       color: var(--text);
     }
