@@ -302,6 +302,8 @@ class Handler(BaseHTTPRequestHandler):
             self._html(STATIC_DIR / "hub_overlay.html"); return
         if path == "/desk":
             self._html(STATIC_DIR / "hub_desk.html"); return
+        if path == "/stream-guide":
+            self._html(STATIC_DIR / "hub_stream_guide.html"); return
 
         # API
         if path == "/api/teams":

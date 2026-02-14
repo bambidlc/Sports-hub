@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>How to Stream — Sports Hub</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@500;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4ff;--card:#fff;--text:#1e293b;--muted:#64748b;
+  --bball:#ff6b2b;--vball:#6366f1;--green:#10b981;--red:#ef4444;
+  --shadow:0 6px 24px rgba(0,0,0,0.07);--radius:16px;
+}
+body{
+  font-family:"Inter",system-ui,sans-serif;color:var(--text);min-height:100vh;
+  background:
+    radial-gradient(ellipse at 20% 0%,rgba(99,102,241,0.1),transparent 50%),
+    radial-gradient(ellipse at 80% 100%,rgba(255,107,43,0.08),transparent 50%),
+    var(--bg);
+}
+.app{max-width:700px;margin:0 auto;padding:16px}
+
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.back{
+  background:var(--card);border:none;border-radius:10px;padding:8px 14px;
+  font-weight:600;cursor:pointer;font-family:inherit;box-shadow:var(--shadow);
+  font-size:0.82rem;color:var(--text);
+}
+.topbar h1{
+  font-family:"Unbounded",sans-serif;font-size:1.1rem;font-weight:800;
+  background:linear-gradient(135deg,var(--bball),var(--vball));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+
+.card{
+  background:var(--card);border-radius:var(--radius);padding:20px;
+  box-shadow:var(--shadow);margin-bottom:16px;
+}
+.card h2{
+  font-family:"Unbounded",sans-serif;font-size:0.95rem;font-weight:800;
+  margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+.card h3{font-size:0.85rem;font-weight:700;margin:12px 0 6px;color:var(--vball)}
+.card p{font-size:0.85rem;line-height:1.6;color:#475569;margin-bottom:8px}
+.card ol,.card ul{padding-left:20px;margin-bottom:12px}
+.card li{font-size:0.85rem;line-height:1.7;color:#475569;margin-bottom:4px}
+.card li b{color:var(--text)}
+.card code{
+  background:#f1f5f9;padding:2px 8px;border-radius:6px;font-size:0.8rem;
+  font-family:"SF Mono","Fira Code",monospace;color:var(--vball);
+  word-break:break-all;
+}
+.card .url-box{
+  background:#f8fafc;border:2px solid #e2e8f0;border-radius:12px;
+  padding:12px 16px;margin:8px 0 12px;font-family:monospace;font-size:0.82rem;
+  color:var(--vball);word-break:break-all;display:flex;align-items:center;gap:8px;
+}
+.card .url-box .copy-btn{
+  background:var(--vball);color:#fff;border:none;border-radius:8px;
+  padding:6px 12px;font-size:0.72rem;font-weight:700;cursor:pointer;
+  font-family:inherit;flex-shrink:0;
+}
+
+.method-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.method-card{
+  background:#f8fafc;border:2px solid #e2e8f0;border-radius:14px;
+  padding:16px;text-align:center;cursor:pointer;transition:all .2s;
+}
+.method-card:hover{border-color:var(--vball);background:#eef2ff}
+.method-card .emoji{font-size:2rem;display:block;margin-bottom:6px}
+.method-card .name{font-weight:800;font-size:0.88rem;margin-bottom:2px}
+.method-card .desc{font-size:0.72rem;color:var(--muted)}
+
+.badge{
+  display:inline-block;padding:3px 10px;border-radius:999px;
+  font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;
+}
+.badge.easy{background:#dcfce7;color:#16a34a}
+.badge.pro{background:#eef2ff;color:var(--vball)}
+.badge.best{background:#fef3c7;color:#d97706}
+
+.tip{
+  background:linear-gradient(135deg,#eef2ff,#f0f4ff);
+  border-left:4px solid var(--vball);border-radius:0 12px 12px 0;
+  padding:12px 16px;margin:12px 0;
+}
+.tip p{margin:0;font-size:0.82rem}
+.tip b{color:var(--vball)}
+
+@media(max-width:500px){
+  .method-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <button class="back" onclick="location.href='/'">← Home</button>
+    <h1>📡 How to Stream</h1>
+  </div>
+
+  <!-- Overview -->
+  <div class="card">
+    <h2>🎬 Stream Your Game Live</h2>
+    <p>Sports Hub gives you <b>three ways</b> to go live on YouTube, Facebook, or any platform. Pick the method that works best for you:</p>
+
+    <div class="method-grid">
+      <div class="method-card" onclick="document.getElementById('method1').scrollIntoView({behavior:'smooth'})">
+        <span class="emoji">📱</span>
+        <div class="name">iPhone Only</div>
+        <div class="desc">Camera + score overlay in one</div>
+        <span class="badge easy">Easiest</span>
+      </div>
+      <div class="method-card" onclick="document.getElementById('method2').scrollIntoView({behavior:'smooth'})">
+        <span class="emoji">💻</span>
+        <div class="name">OBS Studio</div>
+        <div class="desc">Pro setup with browser overlay</div>
+        <span class="badge pro">Pro</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Method 1: iPhone Only -->
+  <div class="card" id="method1">
+    <h2>📱 Method 1: iPhone Camera Stream</h2>
+    <span class="badge easy">Easiest — No Computer Needed</span>
+
+    <h3>What You Need</h3>
+    <ul>
+      <li>iPhone with iOS 15+</li>
+      <li>YouTube app or <b>Streamlabs</b> app (free)</li>
+      <li>Your Sports Hub URL</li>
+    </ul>
+
+    <h3>Step-by-Step</h3>
+    <ol>
+      <li>Open your Sports Hub and create a match at <code>/desk</code></li>
+      <li>On your iPhone, open the <b>overlay page</b>:</li>
+    </ol>
+    <div class="url-box">
+      <span id="overlayUrl">https://your-app.onrender.com/overlay?id=1</span>
+      <button class="copy-btn" onclick="copyUrl('overlayUrl')">Copy</button>
+    </div>
+    <ol start="3">
+      <li>Tap <b>"🎥 Start Camera"</b> — your rear camera activates</li>
+      <li>The score bug appears on top of the camera feed</li>
+      <li>Now use <b>iPhone Screen Recording</b> to capture everything:
+        <ul>
+          <li>Open <b>Control Center</b> (swipe down from top-right)</li>
+          <li>Long-press the <b>Screen Record</b> button</li>
+          <li>Select <b>YouTube</b> or <b>Streamlabs</b> as the broadcast destination</li>
+          <li>Tap <b>"Start Broadcast"</b></li>
+        </ul>
+      </li>
+      <li>Your iPhone is now streaming the camera + live score to YouTube! 🎉</li>
+    </ol>
+
+    <div class="tip">
+      <p>💡 <b>Pro tip:</b> Have a second person manage the score desk on another phone/tablet while you hold the camera steady.</p>
+    </div>
+  </div>
+
+  <!-- Method 2: OBS -->
+  <div class="card" id="method2">
+    <h2>💻 Method 2: OBS Studio (Computer)</h2>
+    <span class="badge pro">Professional Quality</span>
+
+    <h3>What You Need</h3>
+    <ul>
+      <li>Computer with <b>OBS Studio</b> (free — obsproject.com)</li>
+      <li>Camera (webcam, capture card, or phone as webcam)</li>
+      <li>YouTube stream key</li>
+    </ul>
+
+    <h3>Step-by-Step</h3>
+    <ol>
+      <li>Open <b>OBS Studio</b> on your computer</li>
+      <li>Add your camera source (webcam or capture card)</li>
+      <li>Add a <b>Browser Source</b> with this URL:</li>
+    </ol>
+    <div class="url-box">
+      <span id="obsUrl">https://your-app.onrender.com/overlay?id=1&nobg=1&minimal=1</span>
+      <button class="copy-btn" onclick="copyUrl('obsUrl')">Copy</button>
+    </div>
+    <ol start="4">
+      <li>Set Browser Source size to <b>1920×1080</b></li>
+      <li>The score bug appears with a <b>transparent background</b> — it overlays perfectly on your camera feed</li>
+      <li>In OBS, go to <b>Settings → Stream</b>, select YouTube, paste your stream key</li>
+      <li>Click <b>"Start Streaming"</b> — you're live! 🎉</li>
+    </ol>
+
+    <div class="tip">
+      <p>💡 <b>The <code>?nobg=1&minimal=1</code> parameters</b> remove the background and extra controls, giving you a clean transparent overlay perfect for OBS.</p>
+    </div>
+
+    <h3>Using iPhone as Camera for OBS</h3>
+    <p>You can use your iPhone as a wireless camera for OBS:</p>
+    <ul>
+      <li><b>macOS:</b> Use "Continuity Camera" — just point your iPhone at the game</li>
+      <li><b>Windows:</b> Use <b>DroidCam</b> or <b>Camo</b> app to connect your iPhone as a webcam</li>
+      <li><b>Capture Card:</b> Connect a camera via HDMI capture card for best quality</li>
+    </ul>
+  </div>
+
+  <!-- Quick Links -->
+  <div class="card">
+    <h2>🔗 Quick Links</h2>
+    <p>Copy these URLs and replace <code>your-app</code> with your actual Render URL:</p>
+
+    <h3>Score Desk (manage the game)</h3>
+    <div class="url-box">
+      <span>https://your-app.onrender.com/desk?id=1</span>
+    </div>
+
+    <h3>iPhone Camera Overlay</h3>
+    <div class="url-box">
+      <span>https://your-app.onrender.com/overlay?id=1</span>
+    </div>
+
+    <h3>OBS Browser Source (transparent)</h3>
+    <div class="url-box">
+      <span>https://your-app.onrender.com/overlay?id=1&nobg=1&minimal=1</span>
+    </div>
+
+    <h3>Public Scoreboard (share with fans)</h3>
+    <div class="url-box">
+      <span>https://your-app.onrender.com/match?id=1</span>
+    </div>
+  </div>
+</div>
+
+<script>
+function copyUrl(id) {
+  const text = document.getElementById(id)?.textContent || '';
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = '✓';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+</script>
+</body>
+</html>

@@ -214,9 +214,22 @@ html,body{
 
 <script>
 const matchId = new URLSearchParams(location.search).get('id');
+const isMinimal = new URLSearchParams(location.search).get('minimal') === '1';
+const noBg = new URLSearchParams(location.search).get('nobg') === '1';
 let currentFacing = 'environment'; // back camera default
 let stream = null;
 let scoreBugVisible = true;
+
+// OBS mode: hide everything except score bug
+if (isMinimal) {
+  document.querySelector('.bottom-bar').style.display = 'none';
+  document.getElementById('statsPanel').style.display = 'none';
+}
+if (noBg) {
+  document.getElementById('noCam').style.display = 'none';
+  document.getElementById('cameraView').style.display = 'none';
+  document.body.style.background = 'transparent';
+}
 
 // ── Camera ──
 async function startCamera() {
@@ -341,8 +354,10 @@ if (matchId) {
   setInterval(load, 2000);
 }
 
-// Try to auto-start camera
-startCamera();
+// Try to auto-start camera (skip in OBS mode)
+if (!noBg && !isMinimal) {
+  startCamera();
+}
 </script>
 </body>
 </html>
