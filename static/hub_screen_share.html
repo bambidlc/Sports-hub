@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>YouTube Screen Share Studio - Sports Hub</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@500;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f3f6ff;
+  --card:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --accent:#ef6b2d;
+  --accent-2:#f59e0b;
+  --ok:#16a34a;
+  --err:#dc2626;
+  --shadow:0 10px 36px rgba(15,23,42,.08);
+  --radius:18px;
+}
+body{
+  font-family:"Inter",system-ui,sans-serif;
+  min-height:100vh;
+  color:var(--text);
+  background:
+    radial-gradient(ellipse at 20% 0%,rgba(239,107,45,.14),transparent 55%),
+    radial-gradient(ellipse at 80% 100%,rgba(99,102,241,.08),transparent 55%),
+    var(--bg);
+}
+.app{max-width:980px;margin:0 auto;padding:20px 14px 32px}
+.top{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-bottom:14px;
+}
+.top h1{
+  font-family:"Unbounded",sans-serif;font-size:1.2rem;font-weight:800;
+}
+.back{
+  display:inline-block;padding:8px 14px;border-radius:10px;
+  text-decoration:none;color:var(--text);background:var(--card);box-shadow:var(--shadow);
+  font-size:.85rem;font-weight:600;
+}
+.grid{
+  display:grid;gap:14px;grid-template-columns:1.1fr .9fr;
+}
+.card{
+  background:var(--card);box-shadow:var(--shadow);border-radius:var(--radius);
+  padding:16px;
+}
+.card h2{
+  font-family:"Unbounded",sans-serif;font-size:.86rem;font-weight:700;
+  text-transform:uppercase;color:var(--muted);margin-bottom:10px;
+}
+.stack{display:grid;gap:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.field{display:grid;gap:6px;flex:1;min-width:160px}
+.field label{font-size:.8rem;color:var(--muted);font-weight:600}
+.field input,.field select{
+  width:100%;padding:11px 12px;border:2px solid #e2e8f0;border-radius:11px;
+  font:inherit;font-size:.9rem;background:#f8fafc;color:var(--text);
+}
+.field input:focus,.field select:focus{outline:none;border-color:#f59e0b}
+.help{font-size:.78rem;color:var(--muted);line-height:1.45}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{
+  border:none;border-radius:11px;padding:10px 14px;font:inherit;font-weight:700;
+  cursor:pointer;font-size:.86rem;
+}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff}
+.btn.soft{background:#e2e8f0;color:#334155}
+.btn.dark{background:#0f172a;color:#fff}
+.banner{
+  border-radius:12px;padding:11px 12px;font-size:.84rem;font-weight:600;line-height:1.35;
+}
+.banner.idle{background:#eef2ff;color:#3730a3}
+.banner.live{background:#dcfce7;color:#166534}
+.banner.error{background:#fee2e2;color:#991b1b}
+.preview{
+  border-radius:14px;overflow:hidden;background:#020617;position:relative;min-height:260px;
+  border:1px solid rgba(15,23,42,.12);
+}
+.preview video{
+  width:100%;height:100%;display:block;object-fit:contain;background:#000;min-height:260px;
+}
+.hint{
+  position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:14px;
+  color:#cbd5e1;font-size:.86rem;background:rgba(2,6,23,.54);
+}
+.metrics{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+}
+.metric{
+  background:#f8fafc;border-radius:12px;padding:10px;
+}
+.metric .k{font-size:.7rem;text-transform:uppercase;color:var(--muted);font-weight:700}
+.metric .v{font-family:"Unbounded",sans-serif;font-size:.9rem;margin-top:4px}
+.inline-links{display:flex;gap:8px;flex-wrap:wrap}
+.tiny{
+  font-size:.78rem;padding:7px 10px;border-radius:9px;border:none;cursor:pointer;
+  background:#eef2ff;color:#4338ca;font-weight:700;
+}
+.tiny:disabled{opacity:.4;cursor:not-allowed}
+.error-text{font-size:.76rem;color:var(--err);display:none}
+@media(max-width:860px){
+  .grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <a href="/" class="back">&larr; Dashboard</a>
+    <h1>YouTube Screen Share Studio</h1>
+  </div>
+
+  <div class="banner idle" id="statusBanner">Ready. Capture a tab/window, then start broadcast to YouTube.</div>
+
+  <div class="grid" style="margin-top:12px">
+    <div class="card stack">
+      <h2>Capture + Broadcast</h2>
+
+      <div class="field">
+        <label for="matchSelect">Match (for overlay shortcuts)</label>
+        <select id="matchSelect">
+          <option value="">No match selected</option>
+        </select>
+      </div>
+      <div class="inline-links">
+        <button class="tiny" id="openOverlayBtn" disabled>Open Overlay</button>
+        <button class="tiny" id="openDeskBtn" disabled>Open Score Desk</button>
+        <button class="tiny" id="copyOverlayBtn" disabled>Copy Overlay URL</button>
+      </div>
+      <p class="help">Tip: open the overlay in another tab, then choose that tab when sharing your screen.</p>
+
+      <div class="row">
+        <div class="field">
+          <label for="ingestUrl">YouTube ingest URL</label>
+          <input id="ingestUrl" value="rtmps://a.rtmps.youtube.com/live2"/>
+        </div>
+        <div class="field">
+          <label for="streamKey">YouTube stream key</label>
+          <input id="streamKey" placeholder="xxxx-xxxx-xxxx-xxxx-xxxx" autocomplete="off"/>
+          <div class="error-text" id="keyError">Stream key is required.</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="fps">Frame rate</label>
+          <select id="fps">
+            <option value="30">30 fps</option>
+            <option value="24">24 fps</option>
+            <option value="60">60 fps</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="videoBitrate">Video bitrate</label>
+          <select id="videoBitrate">
+            <option value="4500">4500 kbps</option>
+            <option value="3000">3000 kbps</option>
+            <option value="6000">6000 kbps</option>
+            <option value="8000">8000 kbps</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="audioBitrate">Audio bitrate</label>
+          <select id="audioBitrate">
+            <option value="128">128 kbps</option>
+            <option value="96">96 kbps</option>
+            <option value="160">160 kbps</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn dark" id="startCaptureBtn">Start Screen Capture</button>
+        <button class="btn soft" id="stopCaptureBtn" disabled>Stop Capture</button>
+        <button class="btn primary" id="startBroadcastBtn" disabled>Go Live To YouTube</button>
+        <button class="btn soft" id="stopBroadcastBtn" disabled>Stop Broadcast</button>
+      </div>
+
+      <p class="help">When the browser asks what to share, choose the tab/window that should be live and enable audio if needed.</p>
+    </div>
+
+    <div class="stack">
+      <div class="card">
+        <h2>Broadcast Metrics</h2>
+        <div class="metrics">
+          <div class="metric"><div class="k">Status</div><div class="v" id="metricStatus">Idle</div></div>
+          <div class="metric"><div class="k">Runtime</div><div class="v" id="metricRuntime">00:00</div></div>
+          <div class="metric"><div class="k">Chunks Sent</div><div class="v" id="metricChunks">0</div></div>
+          <div class="metric"><div class="k">Data Sent</div><div class="v" id="metricData">0 MB</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Local Preview</h2>
+        <div class="preview">
+          <video id="preview" autoplay muted playsinline></video>
+          <div class="hint" id="previewHint">No capture active yet.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const matchSelect = document.getElementById("matchSelect");
+const ingestUrlInput = document.getElementById("ingestUrl");
+const streamKeyInput = document.getElementById("streamKey");
+const keyError = document.getElementById("keyError");
+const fpsSelect = document.getElementById("fps");
+const videoBitrateSelect = document.getElementById("videoBitrate");
+const audioBitrateSelect = document.getElementById("audioBitrate");
+const startCaptureBtn = document.getElementById("startCaptureBtn");
+const stopCaptureBtn = document.getElementById("stopCaptureBtn");
+const startBroadcastBtn = document.getElementById("startBroadcastBtn");
+const stopBroadcastBtn = document.getElementById("stopBroadcastBtn");
+const openOverlayBtn = document.getElementById("openOverlayBtn");
+const openDeskBtn = document.getElementById("openDeskBtn");
+const copyOverlayBtn = document.getElementById("copyOverlayBtn");
+const statusBanner = document.getElementById("statusBanner");
+const preview = document.getElementById("preview");
+const previewHint = document.getElementById("previewHint");
+const metricStatus = document.getElementById("metricStatus");
+const metricRuntime = document.getElementById("metricRuntime");
+const metricChunks = document.getElementById("metricChunks");
+const metricData = document.getElementById("metricData");
+
+let captureStream = null;
+let broadcastToken = null;
+let recorder = null;
+let uploadQueue = [];
+let uploadActive = false;
+let sentBytes = 0;
+let sentChunks = 0;
+let startedAt = null;
+let ticker = null;
+
+function setBanner(message, level) {
+  statusBanner.textContent = message;
+  statusBanner.className = "banner " + (level || "idle");
+}
+
+function formatRuntime(ms) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const mins = Math.floor(total / 60).toString().padStart(2, "0");
+  const secs = (total % 60).toString().padStart(2, "0");
+  return `${mins}:${secs}`;
+}
+
+function formatMB(bytes) {
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function updateMetrics() {
+  const live = Boolean(broadcastToken);
+  metricStatus.textContent = live ? "Live" : (captureStream ? "Capture Ready" : "Idle");
+  metricRuntime.textContent = startedAt ? formatRuntime(Date.now() - startedAt) : "00:00";
+  metricChunks.textContent = String(sentChunks);
+  metricData.textContent = formatMB(sentBytes);
+}
+
+function updateButtons() {
+  const hasCapture = Boolean(captureStream);
+  const isLive = Boolean(broadcastToken);
+  startCaptureBtn.disabled = hasCapture;
+  stopCaptureBtn.disabled = !hasCapture;
+  startBroadcastBtn.disabled = !hasCapture || isLive;
+  stopBroadcastBtn.disabled = !isLive;
+}
+
+function overlayUrlForMatch() {
+  const matchId = matchSelect.value;
+  if (!matchId) return "";
+  return `${location.origin}/overlay?id=${encodeURIComponent(matchId)}`;
+}
+
+function deskUrlForMatch() {
+  const matchId = matchSelect.value;
+  if (!matchId) return "";
+  return `${location.origin}/desk?id=${encodeURIComponent(matchId)}`;
+}
+
+function updateOverlayShortcutButtons() {
+  const enabled = Boolean(matchSelect.value);
+  openOverlayBtn.disabled = !enabled;
+  openDeskBtn.disabled = !enabled;
+  copyOverlayBtn.disabled = !enabled;
+}
+
+async function loadMatches() {
+  try {
+    const res = await fetch("/api/matches");
+    const payload = await res.json();
+    const matches = payload.matches || [];
+    if (!matches.length) return;
+
+    const opts = ['<option value="">No match selected</option>'];
+    let preferredId = "";
+    for (const m of matches) {
+      const isLive = m.status === "live";
+      if (!preferredId && isLive) preferredId = String(m.id);
+      const label = `${m.home_name} vs ${m.away_name} (${m.status.toUpperCase()})`;
+      opts.push(`<option value="${m.id}">${label}</option>`);
+    }
+    matchSelect.innerHTML = opts.join("");
+    if (preferredId) {
+      matchSelect.value = preferredId;
+    }
+  } catch (_) {
+    // Non-blocking helper feature.
+  } finally {
+    updateOverlayShortcutButtons();
+  }
+}
+
+function pickMimeType() {
+  const candidates = [
+    "video/webm;codecs=vp9,opus",
+    "video/webm;codecs=vp8,opus",
+    "video/webm;codecs=vp8",
+    "video/webm",
+  ];
+  for (const mime of candidates) {
+    if (window.MediaRecorder && MediaRecorder.isTypeSupported(mime)) return mime;
+  }
+  return "";
+}
+
+async function startCapture() {
+  try {
+    if (captureStream) stopCapture();
+    const fps = parseInt(fpsSelect.value, 10) || 30;
+    captureStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: { ideal: fps, max: fps } },
+      audio: true,
+    });
+    preview.srcObject = captureStream;
+    previewHint.style.display = "none";
+    captureStream.getTracks().forEach((track) => {
+      track.addEventListener("ended", () => {
+        if (broadcastToken) {
+          stopBroadcast("Screen share ended.");
+        } else {
+          stopCapture();
+          setBanner("Screen capture ended.", "idle");
+        }
+      });
+    });
+    setBanner("Capture is ready. Start broadcast when you are set in YouTube Studio.", "idle");
+    updateButtons();
+    updateMetrics();
+  } catch (err) {
+    setBanner(`Capture failed: ${err.message}`, "error");
+  }
+}
+
+function stopCapture() {
+  if (captureStream) {
+    captureStream.getTracks().forEach((track) => track.stop());
+    captureStream = null;
+  }
+  preview.srcObject = null;
+  previewHint.style.display = "grid";
+  updateButtons();
+  updateMetrics();
+}
+
+function queueChunk(blob) {
+  uploadQueue.push(blob);
+  drainQueue();
+}
+
+async function drainQueue() {
+  if (uploadActive || !broadcastToken) return;
+  uploadActive = true;
+  while (uploadQueue.length && broadcastToken) {
+    const blob = uploadQueue.shift();
+    try {
+      const res = await fetch(`/api/broadcast/chunk?token=${encodeURIComponent(broadcastToken)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/octet-stream" },
+        body: blob,
+      });
+      if (!res.ok) {
+        let message = "";
+        try {
+          message = await res.text();
+        } catch (_) {}
+        throw new Error(message || `HTTP ${res.status}`);
+      }
+      sentChunks += 1;
+      sentBytes += blob.size;
+      updateMetrics();
+    } catch (err) {
+      await stopBroadcast(`Broadcast failed: ${err.message}`);
+      break;
+    }
+  }
+  uploadActive = false;
+}
+
+async function startBroadcast() {
+  if (!captureStream) {
+    setBanner("Start capture first.", "error");
+    return;
+  }
+
+  const streamKey = streamKeyInput.value.trim();
+  keyError.style.display = streamKey ? "none" : "block";
+  if (!streamKey) return;
+
+  const mimeType = pickMimeType();
+  if (!mimeType) {
+    setBanner("This browser does not support MediaRecorder WebM for live ingest.", "error");
+    return;
+  }
+
+  let startedToken = "";
+  try {
+    const startRes = await fetch("/api/broadcast/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ingest_url: ingestUrlInput.value.trim(),
+        stream_key: streamKey,
+        fps: parseInt(fpsSelect.value, 10) || 30,
+        video_bitrate_kbps: parseInt(videoBitrateSelect.value, 10) || 4500,
+        audio_bitrate_kbps: parseInt(audioBitrateSelect.value, 10) || 128,
+      }),
+    });
+    const startPayload = await startRes.json();
+    if (!startRes.ok || !startPayload.token) {
+      throw new Error(startPayload.error || "Unable to start broadcast.");
+    }
+
+    broadcastToken = startPayload.token;
+    startedToken = startPayload.token;
+    sentBytes = 0;
+    sentChunks = 0;
+    startedAt = Date.now();
+    ticker = setInterval(updateMetrics, 1000);
+
+    recorder = new MediaRecorder(captureStream, {
+      mimeType,
+      videoBitsPerSecond: (parseInt(videoBitrateSelect.value, 10) || 4500) * 1000,
+      audioBitsPerSecond: (parseInt(audioBitrateSelect.value, 10) || 128) * 1000,
+    });
+    recorder.ondataavailable = (event) => {
+      if (event.data && event.data.size > 0) {
+        queueChunk(event.data);
+      }
+    };
+    recorder.onerror = async (event) => {
+      const err = (event && event.error && event.error.message) || "recorder error";
+      await stopBroadcast(`Recorder failed: ${err}`);
+    };
+    recorder.start(1000);
+
+    setBanner("Live. Sending screen-share chunks to YouTube ingest.", "live");
+    updateButtons();
+    updateMetrics();
+  } catch (err) {
+    if (startedToken) {
+      try {
+        await fetch("/api/broadcast/stop", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: startedToken }),
+        });
+      } catch (_) {}
+    }
+    setBanner(`Could not start broadcast: ${err.message}`, "error");
+    broadcastToken = null;
+    if (ticker) {
+      clearInterval(ticker);
+      ticker = null;
+    }
+    updateButtons();
+    updateMetrics();
+  }
+}
+
+async function stopBroadcast(message) {
+  const token = broadcastToken;
+  broadcastToken = null;
+  uploadQueue = [];
+  uploadActive = false;
+
+  if (recorder && recorder.state !== "inactive") {
+    recorder.stop();
+  }
+  recorder = null;
+
+  if (token) {
+    try {
+      await fetch("/api/broadcast/stop", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+    } catch (_) {}
+  }
+
+  if (ticker) {
+    clearInterval(ticker);
+    ticker = null;
+  }
+  setBanner(message || "Broadcast stopped.", "idle");
+  updateButtons();
+  updateMetrics();
+}
+
+function openOverlay() {
+  const url = overlayUrlForMatch();
+  if (url) window.open(url, "_blank");
+}
+
+function openDesk() {
+  const url = deskUrlForMatch();
+  if (url) window.open(url, "_blank");
+}
+
+async function copyOverlayUrl() {
+  const url = overlayUrlForMatch();
+  if (!url) return;
+  try {
+    await navigator.clipboard.writeText(url);
+    setBanner("Overlay URL copied.", "idle");
+  } catch (_) {
+    setBanner("Clipboard access was blocked by the browser.", "error");
+  }
+}
+
+matchSelect.addEventListener("change", updateOverlayShortcutButtons);
+startCaptureBtn.addEventListener("click", startCapture);
+stopCaptureBtn.addEventListener("click", () => stopCapture());
+startBroadcastBtn.addEventListener("click", startBroadcast);
+stopBroadcastBtn.addEventListener("click", () => stopBroadcast("Broadcast stopped."));
+openOverlayBtn.addEventListener("click", openOverlay);
+openDeskBtn.addEventListener("click", openDesk);
+copyOverlayBtn.addEventListener("click", copyOverlayUrl);
+streamKeyInput.addEventListener("input", () => {
+  keyError.style.display = streamKeyInput.value.trim() ? "none" : "block";
+});
+window.addEventListener("beforeunload", () => {
+  if (broadcastToken) {
+    navigator.sendBeacon(
+      "/api/broadcast/stop",
+      new Blob([JSON.stringify({ token: broadcastToken })], { type: "application/json" })
+    );
+  }
+});
+
+loadMatches();
+updateButtons();
+updateMetrics();
+</script>
+</body>
+</html>

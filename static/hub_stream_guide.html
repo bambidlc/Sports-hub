@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<title>How to Stream — Sports Hub</title>
+<title>How to Stream - Sports Hub</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@500;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -20,7 +20,7 @@ body{
     radial-gradient(ellipse at 80% 100%,rgba(255,107,43,0.08),transparent 50%),
     var(--bg);
 }
-.app{max-width:700px;margin:0 auto;padding:16px}
+.app{max-width:760px;margin:0 auto;padding:16px}
 
 .topbar{display:flex;align-items:center;gap:10px;margin-bottom:20px}
 .back{
@@ -63,7 +63,7 @@ body{
   font-family:inherit;flex-shrink:0;
 }
 
-.method-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.method-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
 .method-card{
   background:#f8fafc;border:2px solid #e2e8f0;border-radius:14px;
   padding:16px;text-align:center;cursor:pointer;transition:all .2s;
@@ -89,7 +89,7 @@ body{
 .tip p{margin:0;font-size:0.82rem}
 .tip b{color:var(--vball)}
 
-@media(max-width:500px){
+@media(max-width:700px){
   .method-grid{grid-template-columns:1fr}
 }
 </style>
@@ -97,147 +97,146 @@ body{
 <body>
 <div class="app">
   <div class="topbar">
-    <button class="back" onclick="location.href='/'">← Home</button>
-    <h1>📡 How to Stream</h1>
+    <button class="back" onclick="location.href='/'">&larr; Home</button>
+    <h1>How to Stream</h1>
   </div>
 
-  <!-- Overview -->
   <div class="card">
-    <h2>🎬 Stream Your Game Live</h2>
-    <p>Sports Hub gives you <b>three ways</b> to go live on YouTube, Facebook, or any platform. Pick the method that works best for you:</p>
+    <h2>Stream Your Game Live</h2>
+    <p>Sports Hub gives you three ways to go live. The built-in screen share studio is the default choice if you want to stream without Streamlabs.</p>
 
     <div class="method-grid">
       <div class="method-card" onclick="document.getElementById('method1').scrollIntoView({behavior:'smooth'})">
-        <span class="emoji">📱</span>
-        <div class="name">iPhone Only</div>
-        <div class="desc">Camera + score overlay in one</div>
-        <span class="badge easy">Easiest</span>
+        <span class="emoji">1</span>
+        <div class="name">Sports Hub Studio</div>
+        <div class="desc">Screen share direct to YouTube</div>
+        <span class="badge best">Recommended</span>
       </div>
       <div class="method-card" onclick="document.getElementById('method2').scrollIntoView({behavior:'smooth'})">
-        <span class="emoji">💻</span>
+        <span class="emoji">2</span>
+        <div class="name">iPhone Only</div>
+        <div class="desc">Camera + score overlay</div>
+        <span class="badge easy">Simple</span>
+      </div>
+      <div class="method-card" onclick="document.getElementById('method3').scrollIntoView({behavior:'smooth'})">
+        <span class="emoji">3</span>
         <div class="name">OBS Studio</div>
-        <div class="desc">Pro setup with browser overlay</div>
+        <div class="desc">Traditional production workflow</div>
         <span class="badge pro">Pro</span>
       </div>
     </div>
   </div>
 
-  <!-- Method 1: iPhone Only -->
   <div class="card" id="method1">
-    <h2>📱 Method 1: iPhone Camera Stream</h2>
-    <span class="badge easy">Easiest — No Computer Needed</span>
+    <h2>Method 1: Sports Hub Screen Share Studio</h2>
+    <span class="badge best">Built In</span>
+
+    <h3>What You Need</h3>
+    <ul>
+      <li>Desktop browser (Chrome or Edge recommended)</li>
+      <li>YouTube stream key</li>
+      <li>FFmpeg installed on the Sports Hub server</li>
+    </ul>
+
+    <h3>Step-by-Step</h3>
+    <ol>
+      <li>Open <code>/screen-share</code> from Sports Hub.</li>
+      <li>Select your match and open the overlay or score desk in a new tab.</li>
+      <li>Click <b>Start Screen Capture</b> and choose the tab/window to share.</li>
+      <li>Paste your YouTube stream key.</li>
+      <li>Click <b>Go Live To YouTube</b>.</li>
+    </ol>
+
+    <div class="url-box">
+      <span id="studioUrl">https://your-app.onrender.com/screen-share</span>
+      <button class="copy-btn" onclick="copyUrl('studioUrl', event)">Copy</button>
+    </div>
+
+    <div class="tip">
+      <p><b>Note:</b> this method replaces Streamlabs. Your browser captures the screen, and Sports Hub relays it to YouTube.</p>
+    </div>
+  </div>
+
+  <div class="card" id="method2">
+    <h2>Method 2: iPhone Camera Stream</h2>
+    <span class="badge easy">No Computer Needed</span>
 
     <h3>What You Need</h3>
     <ul>
       <li>iPhone with iOS 15+</li>
-      <li>YouTube app or <b>Streamlabs</b> app (free)</li>
+      <li>YouTube app with live access enabled on your channel</li>
       <li>Your Sports Hub URL</li>
     </ul>
 
     <h3>Step-by-Step</h3>
     <ol>
-      <li>Open your Sports Hub and create a match at <code>/desk</code></li>
-      <li>On your iPhone, open the <b>overlay page</b>:</li>
+      <li>Create a match and manage scoring from <code>/desk</code>.</li>
+      <li>Open your overlay page on iPhone:</li>
     </ol>
     <div class="url-box">
       <span id="overlayUrl">https://your-app.onrender.com/overlay?id=1</span>
-      <button class="copy-btn" onclick="copyUrl('overlayUrl')">Copy</button>
+      <button class="copy-btn" onclick="copyUrl('overlayUrl', event)">Copy</button>
     </div>
     <ol start="3">
-      <li>Tap <b>"🎥 Start Camera"</b> — your rear camera activates</li>
-      <li>The score bug appears on top of the camera feed</li>
-      <li>Now use <b>iPhone Screen Recording</b> to capture everything:
-        <ul>
-          <li>Open <b>Control Center</b> (swipe down from top-right)</li>
-          <li>Long-press the <b>Screen Record</b> button</li>
-          <li>Select <b>YouTube</b> or <b>Streamlabs</b> as the broadcast destination</li>
-          <li>Tap <b>"Start Broadcast"</b></li>
-        </ul>
-      </li>
-      <li>Your iPhone is now streaming the camera + live score to YouTube! 🎉</li>
+      <li>Tap <b>Start Camera</b> on the overlay page.</li>
+      <li>Start a live stream from the YouTube app.</li>
+      <li>Use iPhone screen share to broadcast the overlay + camera composition.</li>
     </ol>
-
-    <div class="tip">
-      <p>💡 <b>Pro tip:</b> Have a second person manage the score desk on another phone/tablet while you hold the camera steady.</p>
-    </div>
   </div>
 
-  <!-- Method 2: OBS -->
-  <div class="card" id="method2">
-    <h2>💻 Method 2: OBS Studio (Computer)</h2>
+  <div class="card" id="method3">
+    <h2>Method 3: OBS Studio (Computer)</h2>
     <span class="badge pro">Professional Quality</span>
 
     <h3>What You Need</h3>
     <ul>
-      <li>Computer with <b>OBS Studio</b> (free — obsproject.com)</li>
-      <li>Camera (webcam, capture card, or phone as webcam)</li>
+      <li>Computer with OBS Studio</li>
+      <li>Camera source (webcam, phone webcam app, or capture card)</li>
       <li>YouTube stream key</li>
     </ul>
 
     <h3>Step-by-Step</h3>
     <ol>
-      <li>Open <b>OBS Studio</b> on your computer</li>
-      <li>Add your camera source (webcam or capture card)</li>
-      <li>Add a <b>Browser Source</b> with this URL:</li>
+      <li>Add camera source in OBS.</li>
+      <li>Add Browser Source with this URL:</li>
     </ol>
     <div class="url-box">
       <span id="obsUrl">https://your-app.onrender.com/overlay?id=1&nobg=1&minimal=1</span>
-      <button class="copy-btn" onclick="copyUrl('obsUrl')">Copy</button>
+      <button class="copy-btn" onclick="copyUrl('obsUrl', event)">Copy</button>
     </div>
-    <ol start="4">
-      <li>Set Browser Source size to <b>1920×1080</b></li>
-      <li>The score bug appears with a <b>transparent background</b> — it overlays perfectly on your camera feed</li>
-      <li>In OBS, go to <b>Settings → Stream</b>, select YouTube, paste your stream key</li>
-      <li>Click <b>"Start Streaming"</b> — you're live! 🎉</li>
+    <ol start="3">
+      <li>Set Browser Source to 1920x1080.</li>
+      <li>Paste your stream key in OBS stream settings.</li>
+      <li>Start streaming.</li>
     </ol>
-
-    <div class="tip">
-      <p>💡 <b>The <code>?nobg=1&minimal=1</code> parameters</b> remove the background and extra controls, giving you a clean transparent overlay perfect for OBS.</p>
-    </div>
-
-    <h3>Using iPhone as Camera for OBS</h3>
-    <p>You can use your iPhone as a wireless camera for OBS:</p>
-    <ul>
-      <li><b>macOS:</b> Use "Continuity Camera" — just point your iPhone at the game</li>
-      <li><b>Windows:</b> Use <b>DroidCam</b> or <b>Camo</b> app to connect your iPhone as a webcam</li>
-      <li><b>Capture Card:</b> Connect a camera via HDMI capture card for best quality</li>
-    </ul>
   </div>
 
-  <!-- Quick Links -->
   <div class="card">
-    <h2>🔗 Quick Links</h2>
-    <p>Copy these URLs and replace <code>your-app</code> with your actual Render URL:</p>
+    <h2>Quick Links</h2>
+    <p>Replace <code>your-app</code> with your deployed domain.</p>
 
-    <h3>Score Desk (manage the game)</h3>
-    <div class="url-box">
-      <span>https://your-app.onrender.com/desk?id=1</span>
-    </div>
+    <h3>Screen Share Studio</h3>
+    <div class="url-box"><span>https://your-app.onrender.com/screen-share</span></div>
 
-    <h3>iPhone Camera Overlay</h3>
-    <div class="url-box">
-      <span>https://your-app.onrender.com/overlay?id=1</span>
-    </div>
+    <h3>Score Desk</h3>
+    <div class="url-box"><span>https://your-app.onrender.com/desk?id=1</span></div>
 
-    <h3>OBS Browser Source (transparent)</h3>
-    <div class="url-box">
-      <span>https://your-app.onrender.com/overlay?id=1&nobg=1&minimal=1</span>
-    </div>
+    <h3>Overlay</h3>
+    <div class="url-box"><span>https://your-app.onrender.com/overlay?id=1</span></div>
 
-    <h3>Public Scoreboard (share with fans)</h3>
-    <div class="url-box">
-      <span>https://your-app.onrender.com/match?id=1</span>
-    </div>
+    <h3>OBS Overlay</h3>
+    <div class="url-box"><span>https://your-app.onrender.com/overlay?id=1&nobg=1&minimal=1</span></div>
   </div>
 </div>
 
 <script>
-function copyUrl(id) {
+function copyUrl(id, ev) {
   const text = document.getElementById(id)?.textContent || '';
   navigator.clipboard.writeText(text).then(() => {
-    const btn = event.target;
-    btn.textContent = '✓';
-    setTimeout(() => btn.textContent = 'Copy', 1500);
+    if (!ev || !ev.target) return;
+    const btn = ev.target;
+    btn.textContent = 'Copied';
+    setTimeout(() => btn.textContent = 'Copy', 1200);
   });
 }
 </script>

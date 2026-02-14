@@ -7,8 +7,12 @@ Then open http://localhost:8000
 
 import json
 import os
+import shutil
 import sqlite3
+import subprocess
+import threading
 import time
+import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -17,6 +21,9 @@ BASE_DIR = Path(__file__).parent
 STATIC_DIR = BASE_DIR / "static"
 DB_PATH = BASE_DIR / "data" / "hub.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+DEFAULT_YT_INGEST = os.environ.get("YOUTUBE_RTMP_INGEST", "rtmps://a.rtmps.youtube.com/live2")
+BROADCASTS = {}
+BROADCASTS_LOCK = threading.Lock()
 
 # ─── Database helpers ───────────────────────────────────────────────
 
@@ -87,6 +94,117 @@ def row_to_dict(row):
 
 def rows_to_list(rows):
     return [dict(r) for r in rows]
+
+
+def ffmpeg_exists() -> bool:
+    ffmpeg_bin = os.environ.get("FFMPEG_BIN", "ffmpeg")
+    return Path(ffmpeg_bin).exists() or (shutil.which(ffmpeg_bin) is not None)
+
+
+def normalize_ingest_url(ingest_url: str) -> str:
+    raw = (ingest_url or "").strip()
+    if not raw:
+        raw = DEFAULT_YT_INGEST
+    return raw.rstrip("/")
+
+
+def build_stream_target(ingest_url: str, stream_key: str) -> str:
+    key = (stream_key or "").strip()
+    if not key:
+        return ""
+    return f"{normalize_ingest_url(ingest_url)}/{key}"
+
+
+def mask_stream_target(target: str) -> str:
+    if not target:
+        return ""
+    if "/" not in target:
+        return "****"
+    base, key = target.rsplit("/", 1)
+    tail = key[-4:] if len(key) >= 4 else key
+    return f"{base}/****{tail}"
+
+
+def create_ffmpeg_process(target: str, fps: int, video_bitrate_kbps: int, audio_bitrate_kbps: int):
+    ffmpeg_bin = os.environ.get("FFMPEG_BIN", "ffmpeg")
+    frame_rate = max(15, min(60, int(fps or 30)))
+    video_rate = max(800, min(12000, int(video_bitrate_kbps or 4500)))
+    audio_rate = max(64, min(256, int(audio_bitrate_kbps or 128)))
+    gop = frame_rate * 2
+
+    cmd = [
+        ffmpeg_bin,
+        "-hide_banner",
+        "-loglevel", "error",
+        "-fflags", "+genpts",
+        "-f", "webm",
+        "-i", "pipe:0",
+        "-map", "0:v:0",
+        "-map", "0:a:0?",
+        "-c:v", "libx264",
+        "-preset", "veryfast",
+        "-tune", "zerolatency",
+        "-pix_fmt", "yuv420p",
+        "-r", str(frame_rate),
+        "-g", str(gop),
+        "-keyint_min", str(gop),
+        "-b:v", f"{video_rate}k",
+        "-maxrate", f"{video_rate}k",
+        "-bufsize", f"{video_rate * 2}k",
+        "-c:a", "aac",
+        "-b:a", f"{audio_rate}k",
+        "-ar", "44100",
+        "-f", "flv",
+        target,
+    ]
+    create_no_window = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    return subprocess.Popen(
+        cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        bufsize=0,
+        creationflags=create_no_window,
+    )
+
+
+def broadcast_public_state(token: str, broadcast: dict) -> dict:
+    proc = broadcast["process"]
+    return {
+        "token": token,
+        "running": proc.poll() is None,
+        "created_at": broadcast["created_at"],
+        "chunks": broadcast["chunks"],
+        "bytes_in": broadcast["bytes_in"],
+        "last_chunk_at": broadcast["last_chunk_at"],
+        "target": mask_stream_target(broadcast["target"]),
+        "return_code": proc.poll(),
+    }
+
+
+def stop_broadcast(token: str):
+    with BROADCASTS_LOCK:
+        broadcast = BROADCASTS.pop(token, None)
+    if not broadcast:
+        return None
+
+    proc = broadcast["process"]
+    if proc.poll() is None:
+        try:
+            if proc.stdin:
+                proc.stdin.close()
+        except Exception:
+            pass
+        try:
+            proc.wait(timeout=8)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            try:
+                proc.wait(timeout=4)
+            except subprocess.TimeoutExpired:
+                pass
+
+    return broadcast_public_state(token, broadcast)
 
 # ─── Stat computation ───────────────────────────────────────────────
 
@@ -304,6 +422,8 @@ class Handler(BaseHTTPRequestHandler):
             self._html(STATIC_DIR / "hub_desk.html"); return
         if path == "/stream-guide":
             self._html(STATIC_DIR / "hub_stream_guide.html"); return
+        if path == "/screen-share":
+            self._html(STATIC_DIR / "hub_screen_share.html"); return
 
         # API
         if path == "/api/teams":
@@ -385,6 +505,20 @@ class Handler(BaseHTTPRequestHandler):
             conn.close()
             self._json({"events": events}); return
 
+        if path == "/api/broadcast/status":
+            token = qs.get("token", [None])[0]
+            with BROADCASTS_LOCK:
+                if token:
+                    broadcast = BROADCASTS.get(token)
+                    if not broadcast:
+                        self._json({"error": "broadcast not found"}, 404); return
+                    self._json({"broadcast": broadcast_public_state(token, broadcast)}); return
+                entries = [
+                    broadcast_public_state(tok, bcast)
+                    for tok, bcast in BROADCASTS.items()
+                ]
+            self._json({"broadcasts": entries}); return
+
         self.send_response(404)
         self.end_headers()
 
@@ -392,6 +526,93 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         p = urlparse(self.path)
         path = p.path.rstrip("/")
+
+        if path == "/api/broadcast/start":
+            d = self._read_body()
+            stream_key = str(d.get("stream_key", "")).strip()
+            if not stream_key:
+                self._json({"error": "stream_key required"}, 400); return
+            if not ffmpeg_exists():
+                self._json({"error": "ffmpeg not found. Install ffmpeg or set FFMPEG_BIN."}, 500); return
+
+            ingest_url = normalize_ingest_url(str(d.get("ingest_url", "")))
+            target = build_stream_target(ingest_url, stream_key)
+            try:
+                process = create_ffmpeg_process(
+                    target,
+                    d.get("fps", 30),
+                    d.get("video_bitrate_kbps", 4500),
+                    d.get("audio_bitrate_kbps", 128),
+                )
+            except Exception as exc:
+                self._json({"error": f"Failed to start ffmpeg: {exc}"}, 500); return
+
+            token = uuid.uuid4().hex
+            broadcast = {
+                "process": process,
+                "created_at": time.time(),
+                "chunks": 0,
+                "bytes_in": 0,
+                "last_chunk_at": None,
+                "target": target,
+                "write_lock": threading.Lock(),
+            }
+            with BROADCASTS_LOCK:
+                BROADCASTS[token] = broadcast
+            time.sleep(0.1)
+            if process.poll() is not None:
+                with BROADCASTS_LOCK:
+                    BROADCASTS.pop(token, None)
+                self._json({"error": "ffmpeg exited immediately. Verify ingest URL and stream key."}, 500); return
+
+            self._json({"ok": True, "token": token, "broadcast": broadcast_public_state(token, broadcast)}); return
+
+        if path == "/api/broadcast/chunk":
+            token = parse_qs(p.query).get("token", [None])[0]
+            if not token:
+                self._json({"error": "token required"}, 400); return
+
+            with BROADCASTS_LOCK:
+                broadcast = BROADCASTS.get(token)
+            if not broadcast:
+                self._json({"error": "broadcast not found"}, 404); return
+
+            process = broadcast["process"]
+            if process.poll() is not None:
+                self._json({"error": "broadcast is not running", "return_code": process.poll()}, 409); return
+
+            size = int(self.headers.get("Content-Length", "0"))
+            if size <= 0:
+                self._json({"error": "chunk body required"}, 400); return
+            chunk = self.rfile.read(size)
+            if not chunk:
+                self._json({"error": "empty chunk"}, 400); return
+
+            try:
+                with broadcast["write_lock"]:
+                    process.stdin.write(chunk)
+                    process.stdin.flush()
+                    broadcast["chunks"] += 1
+                    broadcast["bytes_in"] += len(chunk)
+                    broadcast["last_chunk_at"] = time.time()
+            except Exception as exc:
+                self._json({"error": f"failed to ingest chunk: {exc}"}, 409); return
+
+            self._json({
+                "ok": True,
+                "chunks": broadcast["chunks"],
+                "bytes_in": broadcast["bytes_in"],
+            }); return
+
+        if path == "/api/broadcast/stop":
+            d = self._read_body()
+            token = str(d.get("token", "")).strip()
+            if not token:
+                self._json({"error": "token required"}, 400); return
+            stopped = stop_broadcast(token)
+            if not stopped:
+                self._json({"error": "broadcast not found"}, 404); return
+            self._json({"ok": True, "broadcast": stopped}); return
 
         if path == "/api/teams":
             d = self._read_body()
