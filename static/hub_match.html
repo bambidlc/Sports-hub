@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Live Scoreboard — Sports Hub</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@500;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4ff;--card:#fff;--text:#1e293b;--muted:#64748b;
+  --bball:#ff6b2b;--vball:#6366f1;--green:#10b981;--red:#ef4444;
+  --shadow:0 8px 32px rgba(0,0,0,0.08);--radius:20px;
+}
+body{
+  font-family:"Inter",sans-serif;color:var(--text);min-height:100vh;
+  background:
+    radial-gradient(ellipse at 30% 0%,rgba(255,107,43,0.12),transparent 50%),
+    radial-gradient(ellipse at 70% 100%,rgba(99,102,241,0.12),transparent 50%),
+    linear-gradient(180deg,#f0f4ff,#e8eeff);
+}
+.app{max-width:800px;margin:0 auto;padding:20px 16px}
+
+.header{text-align:center;margin-bottom:24px}
+.header h1{
+  font-family:"Unbounded",sans-serif;font-size:1.1rem;
+  background:linear-gradient(135deg,var(--bball),var(--vball));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.header .tourney{color:var(--muted);font-size:0.9rem;margin-top:4px}
+.live-dot{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 12px;border-radius:999px;font-size:0.72rem;
+  font-weight:800;text-transform:uppercase;letter-spacing:0.1em;
+  margin-top:8px;
+}
+.live-dot.live{background:#dcfce7;color:#16a34a}
+.live-dot.pending{background:#fef3c7;color:#d97706}
+.live-dot.final{background:#f1f5f9;color:#64748b}
+.live-dot .pulse{
+  width:8px;height:8px;border-radius:50%;background:currentColor;
+  animation:pulse 1.5s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* Score */
+.score-card{
+  background:var(--card);border-radius:var(--radius);padding:32px 24px;
+  box-shadow:var(--shadow);margin-bottom:20px;text-align:center;
+}
+.score-teams{display:flex;justify-content:center;align-items:center;gap:24px}
+.st{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1}
+.st .emoji{font-size:2.5rem}
+.st .tname{font-weight:800;font-size:1.05rem}
+.st .tscore{
+  font-family:"Unbounded",sans-serif;font-size:3rem;font-weight:800;
+  line-height:1;
+}
+.vs-divider{
+  font-family:"Unbounded",sans-serif;font-size:1rem;color:var(--muted);
+  font-weight:700;
+}
+.period-badge{
+  margin-top:12px;font-size:0.82rem;font-weight:700;color:var(--muted);
+}
+
+/* Stats table */
+.stats-section{margin-bottom:20px}
+.stats-section h2{
+  font-size:0.85rem;text-transform:uppercase;letter-spacing:0.12em;
+  color:var(--muted);font-weight:700;margin-bottom:10px;padding-left:4px;
+}
+.stats-table{
+  width:100%;background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;border-collapse:collapse;
+}
+.stats-table th{
+  padding:10px 12px;text-align:left;font-size:0.72rem;text-transform:uppercase;
+  letter-spacing:0.1em;color:var(--muted);font-weight:700;
+  background:#f8fafc;border-bottom:2px solid #e2e8f0;
+}
+.stats-table td{
+  padding:10px 12px;font-size:0.85rem;border-bottom:1px solid #f1f5f9;
+}
+.stats-table tr:last-child td{border-bottom:none}
+.stats-table .pname{font-weight:700}
+.stats-table .num{
+  display:inline-flex;width:26px;height:26px;border-radius:6px;
+  align-items:center;justify-content:center;font-weight:800;font-size:0.75rem;
+  background:#f1f5f9;margin-right:6px;
+}
+
+.back-link{
+  display:inline-block;margin-bottom:16px;padding:8px 16px;border-radius:10px;
+  background:var(--card);box-shadow:var(--shadow);font-weight:600;
+  text-decoration:none;color:var(--text);font-size:0.85rem;
+}
+.back-link:hover{background:#eef2ff}
+
+@media(max-width:500px){
+  .st .tscore{font-size:2.2rem}
+  .st .emoji{font-size:1.8rem}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <a class="back-link" href="/">← Sports Hub</a>
+
+  <div class="header">
+    <h1 id="title">Live Scoreboard</h1>
+    <div class="tourney" id="tourney"></div>
+    <div class="live-dot pending" id="statusDot">
+      <div class="pulse"></div>
+      <span id="statusText">Loading…</span>
+    </div>
+  </div>
+
+  <div class="score-card">
+    <div class="score-teams">
+      <div class="st">
+        <span class="emoji" id="he">🏀</span>
+        <span class="tname" id="hn">—</span>
+        <span class="tscore" id="hs">0</span>
+      </div>
+      <div class="vs-divider">VS</div>
+      <div class="st">
+        <span class="emoji" id="ae">🏀</span>
+        <span class="tname" id="an">—</span>
+        <span class="tscore" id="as">0</span>
+      </div>
+    </div>
+    <div class="period-badge" id="period">—</div>
+  </div>
+
+  <div class="stats-section">
+    <h2 id="homeStatsTitle">Home Stats</h2>
+    <table class="stats-table" id="homeTable">
+      <thead id="homeHead"></thead>
+      <tbody id="homeBody"></tbody>
+    </table>
+  </div>
+
+  <div class="stats-section">
+    <h2 id="awayStatsTitle">Away Stats</h2>
+    <table class="stats-table" id="awayTable">
+      <thead id="awayHead"></thead>
+      <tbody id="awayBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const matchId = new URLSearchParams(location.search).get('id');
+if (!matchId) location.href = '/';
+
+async function load() {
+  const r = await fetch('/api/match?id=' + matchId);
+  const d = await r.json();
+  if (d.error) return;
+  const m = d.match, ht = d.home_team, at = d.away_team;
+  const sport = m.sport;
+
+  document.getElementById('title').textContent = sport === 'volleyball' ? '🏐 Volleyball' : '🏀 Basketball';
+  document.getElementById('tourney').textContent = m.tournament_name || '';
+  
+  const dot = document.getElementById('statusDot');
+  dot.className = 'live-dot ' + m.status;
+  document.getElementById('statusText').textContent =
+    m.status === 'live' ? 'LIVE' : m.status === 'final' ? 'FINAL' : 'UPCOMING';
+
+  document.getElementById('he').textContent = ht.logo_emoji;
+  document.getElementById('ae').textContent = at.logo_emoji;
+  document.getElementById('hn').textContent = ht.name;
+  document.getElementById('an').textContent = at.name;
+  document.getElementById('hs').textContent = m.home_score;
+  document.getElementById('as').textContent = m.away_score;
+  document.getElementById('period').textContent =
+    sport === 'volleyball' ? 'Set ' + m.period : 'Quarter ' + m.period;
+
+  document.getElementById('homeStatsTitle').textContent = ht.name + ' Stats';
+  document.getElementById('awayStatsTitle').textContent = at.name + ' Stats';
+
+  const stats = d.player_stats || [];
+  const homeStats = stats.filter(s => s.team === 'home');
+  const awayStats = stats.filter(s => s.team === 'away');
+
+  if (sport === 'basketball') {
+    renderBBallTable(homeStats, 'homeHead', 'homeBody');
+    renderBBallTable(awayStats, 'awayHead', 'awayBody');
+  } else {
+    renderVBallTable(homeStats, 'homeHead', 'homeBody');
+    renderVBallTable(awayStats, 'awayHead', 'awayBody');
+  }
+}
+
+function renderBBallTable(players, headId, bodyId) {
+  document.getElementById(headId).innerHTML =
+    '<tr><th>Player</th><th>PTS</th><th>AST</th><th>REB</th><th>STL</th><th>BLK</th><th>FLS</th><th>TO</th></tr>';
+  document.getElementById(bodyId).innerHTML = players.map(p => `
+    <tr>
+      <td class="pname">${p.name}</td>
+      <td><b>${p.points||0}</b></td><td>${p.assists||0}</td>
+      <td>${p.rebounds||0}</td><td>${p.steals||0}</td>
+      <td>${p.blocks||0}</td><td>${p.fouls||0}</td><td>${p.turnovers||0}</td>
+    </tr>`).join('') || '<tr><td colspan="8" style="color:var(--muted);text-align:center">No stats yet</td></tr>';
+}
+
+function renderVBallTable(players, headId, bodyId) {
+  document.getElementById(headId).innerHTML =
+    '<tr><th>Player</th><th>K</th><th>ACE</th><th>BLK</th><th>DIG</th><th>AST</th><th>ERR</th></tr>';
+  document.getElementById(bodyId).innerHTML = players.map(p => `
+    <tr>
+      <td class="pname">${p.name}</td>
+      <td><b>${p.kills||0}</b></td><td>${p.aces||0}</td>
+      <td>${p.blocks||0}</td><td>${p.digs||0}</td>
+      <td>${p.assists||0}</td><td>${p.errors||0}</td>
+    </tr>`).join('') || '<tr><td colspan="7" style="color:var(--muted);text-align:center">No stats yet</td></tr>';
+}
+
+load();
+setInterval(load, 3000);
+</script>
+</body>
+</html>

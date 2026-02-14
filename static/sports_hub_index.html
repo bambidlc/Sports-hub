@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sports Hub</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Unbounded:wght@500;700&display=swap');
+
+    :root {
+      --bg: #0a0f15;
+      --panel: #111826;
+      --panel-2: #0c121d;
+      --accent: #ffb100;
+      --accent-2: #00d2ff;
+      --text: #eef3ff;
+      --muted: #96a6bb;
+      --danger: #ff5d5d;
+      --success: #22c55e;
+      --shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "Avenir Next", "Futura", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(0,210,255,0.15), transparent 45%),
+        radial-gradient(circle at 90% 10%, rgba(255,177,0,0.18), transparent 40%),
+        linear-gradient(160deg, #0a0f15 0%, #070b11 100%);
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 2.5rem;
+      letter-spacing: 0.08em;
+      margin: 0;
+      background: linear-gradient(120deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, rgba(17,24,38,0.95), rgba(10,14,22,0.92));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      margin: 0 0 16px;
+    }
+
+    /* Sport Selection */
+    .sports-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+    }
+
+    .sport-card {
+      background: rgba(9, 14, 22, 0.7);
+      border: 2px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .sport-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+    }
+
+    .sport-card.selected {
+      border-color: var(--accent-2);
+      background: rgba(0, 210, 255, 0.1);
+    }
+
+    .sport-icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+
+    .sport-name {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    /* Team Setup */
+    .team-setup {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .team-form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .team-form h3 {
+      margin: 0 0 8px;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .team-form h3 .color-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+    }
+
+    input, select {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      width: 100%;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid rgba(0,210,255,0.35);
+      outline-offset: 2px;
+    }
+
+    .vs-divider {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 1.5rem;
+      color: var(--muted);
+      padding-top: 40px;
+    }
+
+    .color-picker-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .color-picker-row input[type="color"] {
+      width: 50px;
+      height: 42px;
+      padding: 4px;
+      cursor: pointer;
+    }
+
+    .color-picker-row input[type="text"] {
+      flex: 1;
+    }
+
+    /* Buttons */
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .primary {
+      background: linear-gradient(120deg, var(--accent), #ff7a00);
+      color: #0b0f14;
+      box-shadow: 0 12px 24px rgba(255,177,0,0.3);
+    }
+
+    .secondary {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+    }
+
+    .danger {
+      background: rgba(255,93,93,0.15);
+      color: var(--danger);
+      border: 1px solid rgba(255,93,93,0.4);
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    /* Mode Selection */
+    .mode-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .mode-card {
+      background: rgba(9, 14, 22, 0.7);
+      border: 2px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .mode-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+    }
+
+    .mode-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+
+    .mode-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+
+    .mode-desc {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    /* Session Info */
+    .session-info {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 20px;
+      align-items: center;
+      background: rgba(9, 14, 22, 0.7);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .team-display {
+      text-align: center;
+    }
+
+    .team-display .name {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .team-display .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+    }
+
+    .vs-display {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 1.2rem;
+      color: var(--muted);
+    }
+
+    .sport-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(0, 210, 255, 0.15);
+      border: 1px solid rgba(0, 210, 255, 0.3);
+      border-radius: 999px;
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+    }
+
+    /* Hidden */
+    .hidden { display: none !important; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .team-setup {
+        grid-template-columns: 1fr;
+      }
+      .vs-divider {
+        text-align: center;
+        padding-top: 0;
+      }
+      .session-info {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <h1>SPORTS HUB</h1>
+      <p>Create and manage live sports events</p>
+    </div>
+
+    <!-- Sport Selection -->
+    <div id="sportSelection" class="panel">
+      <h2 class="title">Select Sport</h2>
+      <div class="sports-grid">
+        <div class="sport-card" data-sport="basketball">
+          <div class="sport-icon">🏀</div>
+          <div class="sport-name">Basketball</div>
+        </div>
+        <div class="sport-card" data-sport="soccer">
+          <div class="sport-icon">⚽</div>
+          <div class="sport-name">Soccer</div>
+        </div>
+        <div class="sport-card" data-sport="football">
+          <div class="sport-icon">🏈</div>
+          <div class="sport-name">Football</div>
+        </div>
+        <div class="sport-card" data-sport="volleyball">
+          <div class="sport-icon">🏐</div>
+          <div class="sport-name">Volleyball</div>
+        </div>
+        <div class="sport-card" data-sport="hockey">
+          <div class="sport-icon">🏒</div>
+          <div class="sport-name">Hockey</div>
+        </div>
+        <div class="sport-card" data-sport="tennis">
+          <div class="sport-icon">🎾</div>
+          <div class="sport-name">Tennis</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Team Setup -->
+    <div id="teamSetup" class="panel hidden">
+      <h2 class="title">Team Setup</h2>
+      <div class="team-setup">
+        <div class="team-form">
+          <h3><span class="color-dot" id="homeColorDot" style="background: #3b82f6;"></span> Home Team</h3>
+          <input type="text" id="homeTeamName" placeholder="Enter home team name" />
+          <div class="color-picker-row">
+            <input type="color" id="homeTeamColor" value="#3b82f6" />
+            <input type="text" id="homeTeamColorText" value="#3b82f6" placeholder="Team color" />
+          </div>
+        </div>
+        <div class="vs-divider">VS</div>
+        <div class="team-form">
+          <h3><span class="color-dot" id="awayColorDot" style="background: #ef4444;"></span> Away Team</h3>
+          <input type="text" id="awayTeamName" placeholder="Enter away team name" />
+          <div class="color-picker-row">
+            <input type="color" id="awayTeamColor" value="#ef4444" />
+            <input type="text" id="awayTeamColorText" value="#ef4444" placeholder="Team color" />
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="secondary" onclick="goBack()">← Back</button>
+        <button class="primary" onclick="startSession()">Start Game →</button>
+      </div>
+    </div>
+
+    <!-- Active Session -->
+    <div id="activeSession" class="hidden">
+      <div class="session-info">
+        <div class="team-display">
+          <div class="sport-badge"><span id="sportIcon">🏀</span> <span id="sportName">Basketball</span></div>
+          <div class="label">Home</div>
+          <div class="name" id="displayHomeTeam">Home Team</div>
+        </div>
+        <div class="vs-display">VS</div>
+        <div class="team-display">
+          <div class="label">Away</div>
+          <div class="name" id="displayAwayTeam">Away Team</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 class="title">Select Mode</h2>
+        <div class="mode-cards">
+          <a href="/scoreboard" class="mode-card">
+            <div class="mode-icon">📊</div>
+            <div class="mode-name">Live Score</div>
+            <div class="mode-desc">Track scores, fouls, and player stats</div>
+          </a>
+          <a href="/stream-desk" class="mode-card">
+            <div class="mode-icon">📺</div>
+            <div class="mode-name">Stream Desk</div>
+            <div class="mode-desc">Manage live stream with overlay</div>
+          </a>
+          <a href="/overlay" class="mode-card">
+            <div class="mode-icon">🎬</div>
+            <div class="mode-name">Overlay</div>
+            <div class="mode-desc">Scoreboard overlay for streaming</div>
+          </a>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 class="title">Session Actions</h2>
+        <div class="actions">
+          <button class="secondary" onclick="editSession()">Edit Teams</button>
+          <button class="danger" onclick="endSession()">End Session</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let selectedSport = null;
+    let session = null;
+
+    // Sport selection
+    document.querySelectorAll('.sport-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.sport-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedSport = card.dataset.sport;
+        
+        setTimeout(() => {
+          document.getElementById('sportSelection').classList.add('hidden');
+          document.getElementById('teamSetup').classList.remove('hidden');
+        }, 200);
+      });
+    });
+
+    // Color pickers
+    document.getElementById('homeTeamColor').addEventListener('input', (e) => {
+      document.getElementById('homeTeamColorText').value = e.target.value;
+      document.getElementById('homeColorDot').style.background = e.target.value;
+    });
+    document.getElementById('awayTeamColor').addEventListener('input', (e) => {
+      document.getElementById('awayTeamColorText').value = e.target.value;
+      document.getElementById('awayColorDot').style.background = e.target.value;
+    });
+    document.getElementById('homeTeamColorText').addEventListener('input', (e) => {
+      if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+        document.getElementById('homeTeamColor').value = e.target.value;
+        document.getElementById('homeColorDot').style.background = e.target.value;
+      }
+    });
+    document.getElementById('awayTeamColorText').addEventListener('input', (e) => {
+      if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+        document.getElementById('awayTeamColor').value = e.target.value;
+        document.getElementById('awayColorDot').style.background = e.target.value;
+      }
+    });
+
+    function goBack() {
+      document.getElementById('teamSetup').classList.add('hidden');
+      document.getElementById('sportSelection').classList.remove('hidden');
+    }
+
+    async function startSession() {
+      const homeTeamName = document.getElementById('homeTeamName').value || 'Home Team';
+      const awayTeamName = document.getElementById('awayTeamName').value || 'Away Team';
+      const homeColor = document.getElementById('homeTeamColor').value;
+      const awayColor = document.getElementById('awayTeamColor').value;
+
+      try {
+        const res = await fetch('/api/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sport: selectedSport,
+            home_team_name: homeTeamName,
+            away_team_name: awayTeamName,
+            home_color: homeColor,
+            away_color: awayColor
+          })
+        });
+        const data = await res.json();
+        session = data.session;
+        showActiveSession();
+      } catch (err) {
+        console.error('Failed to start session:', err);
+      }
+    }
+
+    function showActiveSession() {
+      document.getElementById('teamSetup').classList.add('hidden');
+      document.getElementById('sportSelection').classList.add('hidden');
+      document.getElementById('activeSession').classList.remove('hidden');
+
+      const sportIcons = {
+        basketball: '🏀', soccer: '⚽', football: '🏈',
+        volleyball: '🏐', hockey: '🏒', tennis: '🎾'
+      };
+
+      document.getElementById('sportIcon').textContent = sportIcons[session.sport] || '🏀';
+      document.getElementById('sportName').textContent = session.sport.charAt(0).toUpperCase() + session.sport.slice(1);
+      document.getElementById('displayHomeTeam').textContent = session.home_team_name;
+      document.getElementById('displayAwayTeam').textContent = session.away_team_name;
+    }
+
+    function editSession() {
+      document.getElementById('activeSession').classList.add('hidden');
+      document.getElementById('teamSetup').classList.remove('hidden');
+      document.getElementById('homeTeamName').value = session.home_team_name;
+      document.getElementById('awayTeamName').value = session.away_team_name;
+      document.getElementById('homeTeamColor').value = session.home_color;
+      document.getElementById('awayTeamColor').value = session.away_color;
+      document.getElementById('homeTeamColorText').value = session.home_color;
+      document.getElementById('awayTeamColorText').value = session.away_color;
+      document.getElementById('homeColorDot').style.background = session.home_color;
+      document.getElementById('awayColorDot').style.background = session.away_color;
+    }
+
+    async function endSession() {
+      if (!confirm('Are you sure you want to end this session?')) return;
+      
+      try {
+        await fetch('/api/finalize', { method: 'POST' });
+        session = null;
+        location.reload();
+      } catch (err) {
+        console.error('Failed to end session:', err);
+      }
+    }
+
+    // Check for existing session on load
+    async function checkSession() {
+      try {
+        const res = await fetch('/api/session');
+        const data = await res.json();
+        if (data.session && data.session.home_team_name) {
+          session = data.session;
+          selectedSport = session.sport;
+          showActiveSession();
+        }
+      } catch (err) {
+        console.error('Failed to check session:', err);
+      }
+    }
+
+    checkSession();
+  </script>
+</body>
+</html>

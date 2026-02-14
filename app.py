@@ -363,6 +363,14 @@ class Handler(BaseHTTPRequestHandler):
             embed_path = STATIC_DIR / "iframe.html"
             self._send_text(embed_path.read_text(encoding="utf-8"), content_type="text/html")
             return
+        if parsed.path in ["/stream-desk", "/stream-desk/"]:
+            stream_desk_path = STATIC_DIR / "stream_desk.html"
+            self._send_text(stream_desk_path.read_text(encoding="utf-8"), content_type="text/html")
+            return
+        if parsed.path in ["/overlay", "/overlay/"]:
+            overlay_path = STATIC_DIR / "overlay.html"
+            self._send_text(overlay_path.read_text(encoding="utf-8"), content_type="text/html")
+            return
         if parsed.path == "/":
             index_path = STATIC_DIR / "index.html"
             self._send_text(index_path.read_text(encoding="utf-8"), content_type="text/html")

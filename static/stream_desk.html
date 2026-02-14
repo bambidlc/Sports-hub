@@ -1,0 +1,1127 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Courtside Live Stream Hub</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Unbounded:wght@500;700&display=swap');
+
+    :root {
+      --bg: #0b1220;
+      --panel: #111a2d;
+      --panel-2: #16223a;
+      --border: rgba(255, 255, 255, 0.12);
+      --text: #f8fafc;
+      --muted: #a5b4d0;
+      --accent: #f59e0b;
+      --accent-soft: rgba(245, 158, 11, 0.18);
+      --shadow: 0 20px 36px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100vh;
+    }
+
+    .app-shell {
+      display: grid;
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .topbar {
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: grid;
+      gap: 2px;
+    }
+
+    .brand-title {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+    }
+
+    .brand-subtitle {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: rgba(148, 163, 184, 0.15);
+    }
+
+    .status-pill.live {
+      color: #bbf7d0;
+      background: rgba(34, 197, 94, 0.2);
+      border-color: rgba(34, 197, 94, 0.5);
+    }
+
+    .status-pill.final {
+      color: #fed7aa;
+      background: rgba(249, 115, 22, 0.2);
+      border-color: rgba(249, 115, 22, 0.5);
+    }
+
+    .layout {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: 1.45fr 0.95fr;
+    }
+
+    .stage-panel {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      min-height: 420px;
+    }
+
+    .toolbar {
+      display: grid;
+      gap: 10px;
+    }
+
+    .toolbar-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .toolbar-title {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+    }
+
+    select,
+    input,
+    button {
+      font: inherit;
+    }
+
+    select,
+    input {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      min-height: 38px;
+    }
+
+    select,
+    .url-input {
+      min-width: 200px;
+      flex: 1;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 9px 12px;
+      min-height: 38px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text);
+      background: rgba(148, 163, 184, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: transform 120ms ease, background 120ms ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0c111f;
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-soft {
+      background: var(--accent-soft);
+      border-color: rgba(245, 158, 11, 0.35);
+      color: #fcd34d;
+    }
+
+    .btn-link {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.45);
+      color: #bfdbfe;
+    }
+
+    .stage {
+      position: relative;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #040811;
+      min-height: 300px;
+    }
+
+    .stage video,
+    .stage iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: none;
+      background: #000;
+      object-fit: cover;
+      min-height: 300px;
+    }
+
+    .stage .visible {
+      display: block;
+    }
+
+    .stage-hint {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 16px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      background: rgba(11, 18, 32, 0.72);
+      pointer-events: none;
+    }
+
+    .overlay {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      display: grid;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .overlay-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #dbeafe;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.34);
+      border-radius: 9px;
+      padding: 5px 9px;
+      backdrop-filter: blur(2px);
+    }
+
+    .overlay-board {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      border-radius: 10px;
+      backdrop-filter: blur(2px);
+    }
+    .overlay-team {
+      display: grid;
+      justify-items: center;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .overlay-team-name {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #cbd5e1;
+      width: 100%;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .overlay-score {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 1.6rem;
+      line-height: 1;
+      color: #f8fafc;
+    }
+
+    .overlay-center {
+      display: grid;
+      justify-items: center;
+      gap: 2px;
+      padding: 0 8px;
+    }
+
+    .overlay-period {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 1rem;
+      color: #fcd34d;
+    }
+
+    .overlay-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #94a3b8;
+    }
+
+    .side-panel {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      max-height: calc(100vh - 90px);
+      overflow: auto;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--panel-2);
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .meta-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.86rem;
+      color: #e2e8f0;
+      align-items: center;
+    }
+
+    .meta-line span:first-child {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.7rem;
+    }
+
+    .link-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .link-row input {
+      font-size: 0.82rem;
+      color: #dbeafe;
+    }
+
+    .launch-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .events-list {
+      display: grid;
+      gap: 8px;
+      max-height: 280px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .event {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(15, 23, 42, 0.55);
+      font-size: 0.84rem;
+    }
+
+    .event-meta {
+      color: #93c5fd;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      white-space: nowrap;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 0.86rem;
+      padding: 6px 0;
+    }
+
+    .tip {
+      color: #cbd5e1;
+      font-size: 0.82rem;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 1024px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .side-panel {
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .overlay {
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+      }
+
+      .overlay-score {
+        font-size: 1.3rem;
+      }
+
+      .overlay-team-name {
+        font-size: 0.64rem;
+      }
+
+      .launch-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="panel topbar">
+      <div class="brand">
+        <div class="brand-title">Courtside Stream Desk</div>
+        <div class="brand-subtitle">Live video + scoreboard + sharing</div>
+      </div>
+      <div class="status-pill" id="globalStatus">Waiting for a started match</div>
+    </header>
+
+    <main class="layout">
+      <section class="panel stage-panel">
+        <div class="toolbar">
+          <div class="toolbar-title">Broadcast Setup</div>
+          <div class="toolbar-row">
+            <select id="matchSelect" aria-label="Select started match"></select>
+            <button class="btn-primary" id="activateBtn">Activate Match</button>
+            <button id="refreshMatchesBtn">Refresh Matches</button>
+          </div>
+          <div class="toolbar-row">
+            <button id="cameraBtn" class="btn-soft">Start Camera</button>
+            <button id="switchCameraBtn">Flip Camera</button>
+            <button id="stopCameraBtn">Stop Camera</button>
+          </div>
+          <div class="toolbar-row">
+            <input id="streamUrlInput" class="url-input" placeholder="Paste YouTube/Twitch/HLS/embed URL" aria-label="External stream URL" />
+            <button class="btn-link" id="loadStreamBtn">Load Stream URL</button>
+            <button id="clearStreamBtn">Clear URL</button>
+          </div>
+        </div>
+
+        <div class="stage" id="stage">
+          <video id="cameraVideo" playsinline autoplay muted></video>
+          <video id="streamVideo" playsinline autoplay controls muted></video>
+          <iframe id="streamFrame" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+          <div class="stage-hint" id="stageHint">Start camera or load a stream URL to begin preview.</div>
+
+          <div class="overlay" id="scoreOverlay">
+            <div class="overlay-head">
+              <span id="overlayMatch">No active match</span>
+              <span id="overlayLiveTag">Idle</span>
+            </div>
+            <div class="overlay-board">
+              <div class="overlay-team">
+                <div class="overlay-team-name" id="overlayHomeName">Home</div>
+                <div class="overlay-score" id="overlayHomeScore">0</div>
+              </div>
+              <div class="overlay-center">
+                <div class="overlay-period" id="overlayPeriod">-</div>
+                <div class="overlay-label">Period</div>
+              </div>
+              <div class="overlay-team">
+                <div class="overlay-team-name" id="overlayAwayName">Away</div>
+                <div class="overlay-score" id="overlayAwayScore">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel side-panel">
+        <section class="card">
+          <div class="card-title">Match Info</div>
+          <div class="meta-line"><span>Match</span><strong id="matchName">No active match</strong></div>
+          <div class="meta-line"><span>Status</span><strong id="matchStatus">Idle</strong></div>
+          <div class="meta-line"><span>Home</span><strong id="homeName">Home</strong></div>
+          <div class="meta-line"><span>Away</span><strong id="awayName">Away</strong></div>
+          <div class="meta-line"><span>Started</span><strong id="startedAt">-</strong></div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">Share and Distribution</div>
+          <div class="link-row">
+            <input id="viewerLink" readonly aria-label="Viewer link" />
+            <button id="copyViewerBtn">Copy</button>
+          </div>
+          <div class="link-row">
+            <input id="overlayLink" readonly aria-label="Overlay link" />
+            <button id="copyOverlayBtn">Copy</button>
+          </div>
+          <div class="toolbar-row">
+            <button id="nativeShareBtn">Native Share</button>
+            <button id="openOverlayBtn">Open Overlay</button>
+          </div>
+          <div class="launch-grid">
+            <button id="youtubeBtn" class="btn-link">YouTube Live</button>
+            <button id="restreamBtn" class="btn-link">Restream Studio</button>
+          </div>
+          <div class="tip">Use the overlay link as an OBS browser source, then stream to YouTube/Restream for a SidelineHD-style workflow.</div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">Recent Events</div>
+          <div class="events-list" id="eventsList"></div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const pollMs = Math.max(1000, Number.parseInt(params.get("poll") || "3000", 10) || 3000);
+
+    const matchSelectEl = document.getElementById("matchSelect");
+    const activateBtn = document.getElementById("activateBtn");
+    const refreshMatchesBtn = document.getElementById("refreshMatchesBtn");
+    const cameraBtn = document.getElementById("cameraBtn");
+    const switchCameraBtn = document.getElementById("switchCameraBtn");
+    const stopCameraBtn = document.getElementById("stopCameraBtn");
+    const streamUrlInput = document.getElementById("streamUrlInput");
+    const loadStreamBtn = document.getElementById("loadStreamBtn");
+    const clearStreamBtn = document.getElementById("clearStreamBtn");
+    const cameraVideoEl = document.getElementById("cameraVideo");
+    const streamVideoEl = document.getElementById("streamVideo");
+    const streamFrameEl = document.getElementById("streamFrame");
+    const stageHintEl = document.getElementById("stageHint");
+
+    const globalStatusEl = document.getElementById("globalStatus");
+    const matchNameEl = document.getElementById("matchName");
+    const matchStatusEl = document.getElementById("matchStatus");
+    const homeNameEl = document.getElementById("homeName");
+    const awayNameEl = document.getElementById("awayName");
+    const startedAtEl = document.getElementById("startedAt");
+
+    const overlayMatchEl = document.getElementById("overlayMatch");
+    const overlayLiveTagEl = document.getElementById("overlayLiveTag");
+    const overlayHomeNameEl = document.getElementById("overlayHomeName");
+    const overlayAwayNameEl = document.getElementById("overlayAwayName");
+    const overlayHomeScoreEl = document.getElementById("overlayHomeScore");
+    const overlayAwayScoreEl = document.getElementById("overlayAwayScore");
+    const overlayPeriodEl = document.getElementById("overlayPeriod");
+
+    const viewerLinkEl = document.getElementById("viewerLink");
+    const overlayLinkEl = document.getElementById("overlayLink");
+    const copyViewerBtn = document.getElementById("copyViewerBtn");
+    const copyOverlayBtn = document.getElementById("copyOverlayBtn");
+    const nativeShareBtn = document.getElementById("nativeShareBtn");
+    const openOverlayBtn = document.getElementById("openOverlayBtn");
+    const youtubeBtn = document.getElementById("youtubeBtn");
+    const restreamBtn = document.getElementById("restreamBtn");
+
+    const eventsListEl = document.getElementById("eventsList");
+
+    let sessions = [];
+    let activeMatchId = params.get("match_id") || params.get("match") || "";
+    let activeSession = null;
+    let pollHandle = null;
+    let cameraStream = null;
+    let facingMode = "environment";
+    let hlsPlayer = null;
+    function setGlobalStatus(text, state) {
+      globalStatusEl.textContent = text;
+      globalStatusEl.classList.remove("live", "final");
+      if (state === "live") {
+        globalStatusEl.classList.add("live");
+      } else if (state === "final") {
+        globalStatusEl.classList.add("final");
+      }
+    }
+
+    function formatDate(value) {
+      if (!value) return "-";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "-";
+      return date.toLocaleString();
+    }
+
+    function formatPeriod(value) {
+      if (!value) return "-";
+      const key = String(value).toLowerCase();
+      if (key === "ot") return "OT";
+      if (key === "q1") return "Q1";
+      if (key === "q2") return "Q2";
+      if (key === "q3") return "Q3";
+      if (key === "q4") return "Q4";
+      return String(value).toUpperCase();
+    }
+
+    function setQueryMatch(matchId) {
+      const next = new URL(window.location.href);
+      if (matchId) {
+        next.searchParams.set("match_id", matchId);
+      } else {
+        next.searchParams.delete("match_id");
+      }
+      history.replaceState({}, "", next);
+    }
+
+    function getViewerUrl(matchId) {
+      const base = `${window.location.origin}/embed`;
+      return matchId ? `${base}?match_id=${encodeURIComponent(matchId)}` : base;
+    }
+
+    function getOverlayUrl(matchId) {
+      const base = `${window.location.origin}/overlay`;
+      return matchId ? `${base}?match_id=${encodeURIComponent(matchId)}` : base;
+    }
+
+    function updateShareLinks() {
+      const viewer = getViewerUrl(activeMatchId);
+      const overlay = getOverlayUrl(activeMatchId);
+      viewerLinkEl.value = viewer;
+      overlayLinkEl.value = overlay;
+      openOverlayBtn.disabled = !activeMatchId;
+      nativeShareBtn.disabled = !activeMatchId || typeof navigator.share !== "function";
+    }
+
+    async function copyText(value, buttonEl, label) {
+      if (!value) return;
+      const original = buttonEl.textContent;
+      try {
+        await navigator.clipboard.writeText(value);
+        buttonEl.textContent = "Copied";
+        setGlobalStatus(
+          `${label} copied`,
+          activeSession && !activeSession.finalized_at ? "live" : "final"
+        );
+      } catch (_error) {
+        buttonEl.textContent = "Failed";
+      }
+      setTimeout(() => {
+        buttonEl.textContent = original;
+      }, 1200);
+    }
+
+    function resetScoreboard() {
+      overlayHomeScoreEl.textContent = "0";
+      overlayAwayScoreEl.textContent = "0";
+      overlayPeriodEl.textContent = "-";
+      eventsListEl.innerHTML = "";
+      const row = document.createElement("div");
+      row.className = "empty";
+      row.textContent = "No events yet.";
+      eventsListEl.appendChild(row);
+    }
+
+    function updateSessionUI(sessionData) {
+      activeSession = sessionData && Object.keys(sessionData).length ? sessionData : null;
+      if (!activeSession) {
+        matchNameEl.textContent = "No active match";
+        matchStatusEl.textContent = "Idle";
+        homeNameEl.textContent = "Home";
+        awayNameEl.textContent = "Away";
+        startedAtEl.textContent = "-";
+        overlayMatchEl.textContent = "No active match";
+        overlayLiveTagEl.textContent = "Idle";
+        overlayHomeNameEl.textContent = "Home";
+        overlayAwayNameEl.textContent = "Away";
+        setGlobalStatus("Waiting for a started match", null);
+        resetScoreboard();
+        return false;
+      }
+
+      const isFinal = Boolean(activeSession.finalized_at);
+      const statusText = isFinal ? "Final" : "Live";
+      const state = isFinal ? "final" : "live";
+      matchNameEl.textContent = activeSession.match_name || activeSession.match_id || "Live match";
+      matchStatusEl.textContent = statusText;
+      homeNameEl.textContent = activeSession.home_team_name || activeSession.home_team_id || "Home";
+      awayNameEl.textContent = activeSession.away_team_name || activeSession.away_team_id || "Away";
+      startedAtEl.textContent = formatDate(activeSession.started_at);
+
+      overlayMatchEl.textContent = activeSession.match_name || "Live match";
+      overlayLiveTagEl.textContent = statusText;
+      overlayHomeNameEl.textContent = homeNameEl.textContent;
+      overlayAwayNameEl.textContent = awayNameEl.textContent;
+
+      setGlobalStatus(`${statusText} feed connected`, state);
+      return true;
+    }
+
+    function updateScores(statsData) {
+      if (!statsData) return;
+      overlayHomeScoreEl.textContent = statsData.home_score ?? 0;
+      overlayAwayScoreEl.textContent = statsData.away_score ?? 0;
+    }
+
+    function renderEvents(events) {
+      eventsListEl.innerHTML = "";
+      if (!events || events.length === 0) {
+        const row = document.createElement("div");
+        row.className = "empty";
+        row.textContent = "No events yet.";
+        eventsListEl.appendChild(row);
+        overlayPeriodEl.textContent = "-";
+        return;
+      }
+
+      const recent = events.slice(-12).reverse();
+      recent.forEach((event) => {
+        const row = document.createElement("div");
+        row.className = "event";
+
+        const label = event.event_type === "score" ? `+${event.points}` : "Foul";
+        const jersey = event.player_jersey ? `#${event.player_jersey}` : "#?";
+        const name = event.player_name || "Unknown";
+
+        const text = document.createElement("div");
+        text.textContent = `${name} ${jersey} ${label}`;
+
+        const meta = document.createElement("div");
+        meta.className = "event-meta";
+        meta.textContent = formatPeriod(event.period);
+
+        row.appendChild(text);
+        row.appendChild(meta);
+        eventsListEl.appendChild(row);
+      });
+
+      const latest = events[events.length - 1];
+      overlayPeriodEl.textContent = formatPeriod(latest?.period);
+    }
+
+    async function getJson(url) {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        return null;
+      }
+      return response.json();
+    }
+
+    async function loadSessions() {
+      const data = await getJson("/api/sessions");
+      sessions = data?.sessions || [];
+
+      matchSelectEl.innerHTML = "";
+      if (!sessions.length) {
+        const option = document.createElement("option");
+        option.value = "";
+        option.textContent = "No started matches yet";
+        matchSelectEl.appendChild(option);
+        activateBtn.disabled = true;
+        return;
+      }
+
+      sessions.forEach((session) => {
+        const option = document.createElement("option");
+        option.value = session.match_id || "";
+        const status = session.finalized_at ? "Final" : "Live";
+        option.textContent = `${session.match_name || session.match_id} (${status})`;
+        matchSelectEl.appendChild(option);
+      });
+
+      activateBtn.disabled = false;
+      if (activeMatchId) {
+        matchSelectEl.value = activeMatchId;
+      }
+      if (!matchSelectEl.value && sessions[0]) {
+        matchSelectEl.value = sessions[0].match_id || "";
+      }
+    }
+
+    function stopPolling() {
+      if (pollHandle) {
+        clearInterval(pollHandle);
+        pollHandle = null;
+      }
+    }
+    async function refreshActiveMatch() {
+      if (!activeMatchId) return;
+
+      const [sessionResp, statsResp, eventsResp] = await Promise.all([
+        getJson(`/api/session?match_id=${encodeURIComponent(activeMatchId)}`),
+        getJson(`/api/stats?match_id=${encodeURIComponent(activeMatchId)}`),
+        getJson(`/api/events?match_id=${encodeURIComponent(activeMatchId)}`)
+      ]);
+
+      const sessionOk = updateSessionUI(sessionResp?.session);
+      if (!sessionOk) {
+        return;
+      }
+      updateScores(statsResp);
+      renderEvents(eventsResp?.events || []);
+
+      if (activeSession?.finalized_at) {
+        stopPolling();
+      }
+    }
+
+    async function activateMatch(matchId) {
+      if (!matchId) {
+        activeMatchId = "";
+        setQueryMatch("");
+        updateSessionUI(null);
+        stopPolling();
+        updateShareLinks();
+        return;
+      }
+
+      activeMatchId = matchId;
+      setQueryMatch(matchId);
+      updateShareLinks();
+      await refreshActiveMatch();
+      stopPolling();
+      pollHandle = setInterval(refreshActiveMatch, pollMs);
+    }
+
+    function clearExternalSources() {
+      if (hlsPlayer) {
+        hlsPlayer.destroy();
+        hlsPlayer = null;
+      }
+      streamVideoEl.pause();
+      streamVideoEl.removeAttribute("src");
+      streamVideoEl.load();
+      streamFrameEl.src = "about:blank";
+      streamVideoEl.classList.remove("visible");
+      streamFrameEl.classList.remove("visible");
+    }
+
+    function showHint(message) {
+      stageHintEl.textContent = message;
+      stageHintEl.style.display = "grid";
+    }
+
+    function hideHint() {
+      stageHintEl.style.display = "none";
+    }
+
+    function stopCamera() {
+      if (!cameraStream) return;
+      cameraStream.getTracks().forEach((track) => track.stop());
+      cameraStream = null;
+      cameraVideoEl.srcObject = null;
+      cameraVideoEl.classList.remove("visible");
+      showHint("Camera stopped. Start camera or load a stream URL.");
+    }
+
+    async function startCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showHint("Camera access is not supported in this browser.");
+        return;
+      }
+
+      stopCamera();
+      clearExternalSources();
+
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+        cameraVideoEl.srcObject = cameraStream;
+        cameraVideoEl.classList.add("visible");
+        hideHint();
+        setGlobalStatus(
+          "Camera preview live",
+          activeSession && !activeSession.finalized_at ? "live" : null
+        );
+      } catch (_error) {
+        showHint("Camera permission denied or unavailable.");
+      }
+    }
+
+    async function switchCamera() {
+      facingMode = facingMode === "environment" ? "user" : "environment";
+      if (cameraStream) {
+        await startCamera();
+      }
+    }
+
+    function normalizeUrl(rawValue) {
+      const value = (rawValue || "").trim();
+      if (!value) return "";
+      if (/^https?:\/\//i.test(value)) return value;
+      return `https://${value}`;
+    }
+
+    function detectSource(urlString) {
+      let parsed;
+      try {
+        parsed = new URL(urlString);
+      } catch (_error) {
+        return null;
+      }
+
+      const host = parsed.hostname.toLowerCase();
+      const pathname = parsed.pathname || "";
+
+      if (host.includes("youtu.be") || host.includes("youtube.com")) {
+        let videoId = "";
+        if (host.includes("youtu.be")) {
+          videoId = pathname.replace("/", "").split("/")[0];
+        } else if (parsed.searchParams.get("v")) {
+          videoId = parsed.searchParams.get("v");
+        } else {
+          const chunks = pathname.split("/").filter(Boolean);
+          if (
+            chunks.length >= 2 &&
+            (chunks[0] === "embed" || chunks[0] === "live" || chunks[0] === "shorts")
+          ) {
+            videoId = chunks[1];
+          }
+        }
+        if (!videoId) return null;
+        return {
+          type: "iframe",
+          url: `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1`
+        };
+      }
+
+      if (host.includes("twitch.tv")) {
+        const segments = pathname.split("/").filter(Boolean);
+        const parent = window.location.hostname;
+        if (segments[0] === "videos" && segments[1]) {
+          return {
+            type: "iframe",
+            url: `https://player.twitch.tv/?video=v${segments[1]}&parent=${encodeURIComponent(parent)}&autoplay=true&muted=true`
+          };
+        }
+        if (segments[0]) {
+          return {
+            type: "iframe",
+            url: `https://player.twitch.tv/?channel=${encodeURIComponent(segments[0])}&parent=${encodeURIComponent(parent)}&autoplay=true&muted=true`
+          };
+        }
+      }
+
+      if (/\.(m3u8)(\?|$)/i.test(pathname)) {
+        return { type: "hls", url: parsed.toString() };
+      }
+
+      if (/\.(mp4|webm|ogg)(\?|$)/i.test(pathname)) {
+        return { type: "video", url: parsed.toString() };
+      }
+
+      return { type: "iframe", url: parsed.toString() };
+    }
+
+    function loadHls(url) {
+      if (streamVideoEl.canPlayType("application/vnd.apple.mpegurl")) {
+        streamVideoEl.src = url;
+        streamVideoEl.play().catch(() => {});
+        return true;
+      }
+      if (window.Hls && window.Hls.isSupported()) {
+        hlsPlayer = new Hls();
+        hlsPlayer.loadSource(url);
+        hlsPlayer.attachMedia(streamVideoEl);
+        hlsPlayer.on(Hls.Events.MANIFEST_PARSED, () => {
+          streamVideoEl.play().catch(() => {});
+        });
+        return true;
+      }
+      return false;
+    }
+
+    function loadStreamUrl() {
+      const normalized = normalizeUrl(streamUrlInput.value);
+      if (!normalized) {
+        showHint("Paste a stream URL first.");
+        return;
+      }
+
+      const source = detectSource(normalized);
+      if (!source) {
+        showHint("Unsupported stream URL format.");
+        return;
+      }
+
+      stopCamera();
+      clearExternalSources();
+
+      if (source.type === "iframe") {
+        streamFrameEl.src = source.url;
+        streamFrameEl.classList.add("visible");
+        hideHint();
+        setGlobalStatus(
+          "External stream loaded",
+          activeSession && !activeSession.finalized_at ? "live" : null
+        );
+        return;
+      }
+
+      streamVideoEl.classList.add("visible");
+      if (source.type === "hls") {
+        const ok = loadHls(source.url);
+        if (!ok) {
+          clearExternalSources();
+          showHint("HLS playback not supported in this browser.");
+          return;
+        }
+      } else {
+        streamVideoEl.src = source.url;
+        streamVideoEl.play().catch(() => {});
+      }
+
+      hideHint();
+      setGlobalStatus(
+        "External stream loaded",
+        activeSession && !activeSession.finalized_at ? "live" : null
+      );
+    }
+
+    async function nativeShare() {
+      if (!activeMatchId || typeof navigator.share !== "function") {
+        return;
+      }
+      try {
+        await navigator.share({
+          title: `${matchNameEl.textContent} - Live Stream`,
+          text: "Watch live game stream and scoreboard",
+          url: viewerLinkEl.value
+        });
+      } catch (_error) {
+        // User canceled or share not available.
+      }
+    }
+
+    refreshMatchesBtn.addEventListener("click", async () => {
+      await loadSessions();
+      if (activeMatchId) {
+        matchSelectEl.value = activeMatchId;
+      }
+    });
+
+    activateBtn.addEventListener("click", () => {
+      activateMatch(matchSelectEl.value);
+    });
+
+    cameraBtn.addEventListener("click", startCamera);
+    switchCameraBtn.addEventListener("click", switchCamera);
+    stopCameraBtn.addEventListener("click", stopCamera);
+
+    loadStreamBtn.addEventListener("click", loadStreamUrl);
+    clearStreamBtn.addEventListener("click", () => {
+      clearExternalSources();
+      showHint("Start camera or load a stream URL to begin preview.");
+    });
+
+    copyViewerBtn.addEventListener("click", () => {
+      copyText(viewerLinkEl.value, copyViewerBtn, "Viewer link");
+    });
+
+    copyOverlayBtn.addEventListener("click", () => {
+      copyText(overlayLinkEl.value, copyOverlayBtn, "Overlay link");
+    });
+
+    openOverlayBtn.addEventListener("click", () => {
+      if (!activeMatchId) return;
+      window.open(overlayLinkEl.value, "_blank", "noopener,noreferrer");
+    });
+
+    nativeShareBtn.addEventListener("click", nativeShare);
+
+    youtubeBtn.addEventListener("click", () => {
+      window.open(
+        "https://studio.youtube.com/channel/UC/livestreaming/create",
+        "_blank",
+        "noopener,noreferrer"
+      );
+    });
+
+    restreamBtn.addEventListener("click", () => {
+      window.open("https://studio.restream.io/home", "_blank", "noopener,noreferrer");
+    });
+
+    window.addEventListener("beforeunload", () => {
+      stopPolling();
+      stopCamera();
+      clearExternalSources();
+    });
+
+    (async () => {
+      updateShareLinks();
+      await loadSessions();
+      if (activeMatchId) {
+        matchSelectEl.value = activeMatchId;
+        await activateMatch(activeMatchId);
+      } else if (sessions.length === 1 && sessions[0].match_id) {
+        matchSelectEl.value = sessions[0].match_id;
+        await activateMatch(sessions[0].match_id);
+      } else {
+        updateSessionUI(null);
+      }
+    })();
+  </script>
+</body>
+</html>

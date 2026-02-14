@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Teams & Rosters — Sports Hub</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@500;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4ff;--card:#fff;--text:#1e293b;--muted:#64748b;
+  --bball:#ff6b2b;--vball:#6366f1;--green:#10b981;
+  --shadow:0 8px 32px rgba(0,0,0,0.08);--radius:18px;
+}
+body{
+  font-family:"Inter",sans-serif;color:var(--text);min-height:100vh;
+  background:
+    radial-gradient(ellipse at 0% 50%,rgba(99,102,241,0.12),transparent 50%),
+    radial-gradient(ellipse at 100% 0%,rgba(255,107,43,0.1),transparent 50%),
+    linear-gradient(180deg,#f0f4ff,#e8eeff);
+}
+.app{max-width:960px;margin:0 auto;padding:20px 16px}
+
+.topbar{display:flex;align-items:center;gap:12px;margin-bottom:28px;flex-wrap:wrap}
+.back-btn{
+  background:var(--card);border:none;border-radius:12px;padding:10px 16px;
+  font-size:0.9rem;font-weight:600;cursor:pointer;box-shadow:var(--shadow);
+  font-family:inherit;color:var(--text);transition:all .2s;
+}
+.back-btn:hover{transform:translateY(-1px)}
+.topbar h1{
+  font-family:"Unbounded",sans-serif;font-size:1.5rem;font-weight:800;
+  background:linear-gradient(135deg,var(--bball),var(--vball));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+
+/* Tabs */
+.tabs{display:flex;gap:8px;margin-bottom:24px}
+.tab{
+  padding:10px 20px;border-radius:12px;border:2px solid #e2e8f0;
+  background:var(--card);font-weight:700;cursor:pointer;font-family:inherit;
+  font-size:0.88rem;transition:all .2s;color:var(--muted);
+}
+.tab.active{border-color:var(--vball);background:#eef2ff;color:var(--vball)}
+.tab:hover:not(.active){border-color:#cbd5e1}
+
+/* Add team form */
+.add-bar{
+  display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;
+  background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);
+}
+.add-bar input,.add-bar select{
+  flex:1;min-width:120px;padding:10px 14px;border:2px solid #e2e8f0;
+  border-radius:12px;font-family:inherit;font-size:0.9rem;background:var(--bg);outline:none;
+}
+.add-bar input:focus,.add-bar select:focus{border-color:var(--vball)}
+.add-bar input[type="color"]{width:48px;flex:none;padding:4px;cursor:pointer}
+.add-bar button{
+  padding:10px 24px;border:none;border-radius:12px;
+  background:linear-gradient(135deg,var(--bball),var(--vball));color:#fff;
+  font-weight:700;cursor:pointer;font-family:inherit;font-size:0.9rem;transition:all .2s;
+}
+.add-bar button:hover{opacity:0.9}
+
+/* Team cards */
+.teams-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.team-card{
+  background:var(--card);border-radius:var(--radius);overflow:hidden;
+  box-shadow:var(--shadow);transition:all .2s;
+}
+.team-card:hover{transform:translateY(-2px);box-shadow:0 16px 48px rgba(0,0,0,0.12)}
+.team-header{
+  padding:16px 20px;display:flex;align-items:center;gap:12px;position:relative;
+}
+.team-header::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:var(--team-color,#3b82f6);
+}
+.team-emoji{font-size:2rem}
+.team-info{flex:1}
+.team-info h3{font-size:1.05rem;font-weight:700}
+.team-info .sport-tag{
+  font-size:0.72rem;text-transform:uppercase;font-weight:700;letter-spacing:0.08em;
+  padding:2px 8px;border-radius:6px;display:inline-block;margin-top:2px;
+}
+.sport-tag.basketball{background:#fff7ed;color:var(--bball)}
+.sport-tag.volleyball{background:#eef2ff;color:var(--vball)}
+.team-actions{display:flex;gap:6px}
+.team-actions button{
+  background:#f1f5f9;border:none;border-radius:8px;padding:6px 10px;
+  cursor:pointer;font-size:0.85rem;transition:all .15s;
+}
+.team-actions button:hover{background:#e2e8f0}
+.team-actions button.delete:hover{background:#fee2e2;color:#dc2626}
+
+/* Roster */
+.roster{padding:0 20px 16px}
+.roster-title{
+  font-size:0.75rem;text-transform:uppercase;letter-spacing:0.12em;
+  color:var(--muted);font-weight:700;margin-bottom:10px;
+}
+.player-row{
+  display:flex;align-items:center;gap:10px;padding:8px 0;
+  border-bottom:1px solid #f1f5f9;
+}
+.player-row:last-child{border-bottom:none}
+.player-num{
+  width:32px;height:32px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-weight:800;font-size:0.85rem;
+  background:linear-gradient(135deg,#f1f5f9,#e2e8f0);color:var(--text);
+}
+.player-name{flex:1;font-weight:600;font-size:0.9rem}
+.player-pos{font-size:0.78rem;color:var(--muted);font-weight:500}
+.player-actions button{
+  background:none;border:none;cursor:pointer;font-size:0.85rem;
+  color:var(--muted);padding:4px;transition:color .15s;
+}
+.player-actions button:hover{color:#dc2626}
+
+/* Add player inline */
+.add-player-row{
+  display:flex;gap:6px;padding:10px 0;align-items:center;
+}
+.add-player-row input{
+  flex:1;min-width:60px;padding:8px 10px;border:2px solid #e2e8f0;
+  border-radius:10px;font-family:inherit;font-size:0.85rem;outline:none;background:var(--bg);
+}
+.add-player-row input:focus{border-color:var(--vball)}
+.add-player-row button{
+  padding:8px 14px;border:none;border-radius:10px;background:var(--green);
+  color:#fff;font-weight:700;cursor:pointer;font-size:0.85rem;font-family:inherit;
+}
+
+.empty-state{
+  text-align:center;padding:48px;color:var(--muted);
+  background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+}
+.empty-state .emoji{font-size:3rem;display:block;margin-bottom:12px}
+
+@media(max-width:600px){
+  .teams-grid{grid-template-columns:1fr}
+  .add-bar{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <button class="back-btn" onclick="location.href='/'">← Home</button>
+    <h1>Teams & Rosters</h1>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-sport="" onclick="setFilter(this,'')">All</button>
+    <button class="tab" data-sport="basketball" onclick="setFilter(this,'basketball')">🏀 Basketball</button>
+    <button class="tab" data-sport="volleyball" onclick="setFilter(this,'volleyball')">🏐 Volleyball</button>
+  </div>
+
+  <div class="add-bar">
+    <select id="newSport">
+      <option value="basketball">🏀 Basketball</option>
+      <option value="volleyball">🏐 Volleyball</option>
+    </select>
+    <input type="text" id="newName" placeholder="Team name…"/>
+    <input type="text" id="newEmoji" placeholder="Emoji" value="🏀" style="width:60px;flex:none"/>
+    <input type="color" id="newColor" value="#3b82f6"/>
+    <button onclick="addTeam()">+ Add Team</button>
+  </div>
+
+  <div class="teams-grid" id="teamsGrid"></div>
+</div>
+
+<script>
+let teams = [], sportFilter = '';
+
+async function api(path, body) {
+  const opts = body ? {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)} : {};
+  return (await fetch(path, opts)).json();
+}
+
+function setFilter(btn, sport) {
+  sportFilter = sport;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+async function loadTeams() {
+  const d = await api('/api/teams');
+  teams = d.teams || [];
+  // Load players for each team
+  for (const t of teams) {
+    const pd = await api('/api/players?team_id=' + t.id);
+    t.players = pd.players || [];
+  }
+  render();
+}
+
+function render() {
+  const grid = document.getElementById('teamsGrid');
+  let filtered = sportFilter ? teams.filter(t => t.sport === sportFilter) : teams;
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><span class="emoji">👥</span><p>No teams yet. Add one above!</p></div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(t => `
+    <div class="team-card" style="--team-color:${t.color}">
+      <div class="team-header">
+        <span class="team-emoji">${t.logo_emoji}</span>
+        <div class="team-info">
+          <h3>${t.name}</h3>
+          <span class="sport-tag ${t.sport}">${t.sport}</span>
+        </div>
+        <div class="team-actions">
+          <button onclick="deleteTeam(${t.id})" class="delete" title="Delete">🗑️</button>
+        </div>
+      </div>
+      <div class="roster">
+        <div class="roster-title">ROSTER (${(t.players||[]).length} players)</div>
+        ${(t.players||[]).map(p => `
+          <div class="player-row">
+            <div class="player-num">${p.number || '–'}</div>
+            <span class="player-name">${p.name}</span>
+            <span class="player-pos">${p.position}</span>
+            <div class="player-actions">
+              <button onclick="deletePlayer(${p.id})" title="Remove">✕</button>
+            </div>
+          </div>
+        `).join('')}
+        <div class="add-player-row">
+          <input type="text" placeholder="#" id="pnum_${t.id}" style="width:48px;flex:none"/>
+          <input type="text" placeholder="Player name" id="pname_${t.id}"/>
+          <input type="text" placeholder="Pos" id="ppos_${t.id}" style="width:60px;flex:none"/>
+          <button onclick="addPlayer(${t.id})">+</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function addTeam() {
+  const sport = document.getElementById('newSport').value;
+  const name = document.getElementById('newName').value.trim();
+  const emoji = document.getElementById('newEmoji').value.trim() || '🏀';
+  const color = document.getElementById('newColor').value;
+  if (!name) { alert('Enter a team name'); return; }
+  await api('/api/teams', { name, sport, color, logo_emoji: emoji });
+  document.getElementById('newName').value = '';
+  await loadTeams();
+}
+
+async function deleteTeam(id) {
+  if (!confirm('Delete this team and all its players?')) return;
+  await api('/api/teams/delete', { id });
+  await loadTeams();
+}
+
+async function addPlayer(teamId) {
+  const name = document.getElementById('pname_' + teamId).value.trim();
+  const number = document.getElementById('pnum_' + teamId).value.trim();
+  const position = document.getElementById('ppos_' + teamId).value.trim();
+  if (!name) { alert('Enter player name'); return; }
+  await api('/api/players', { team_id: teamId, name, number, position });
+  document.getElementById('pname_' + teamId).value = '';
+  document.getElementById('pnum_' + teamId).value = '';
+  document.getElementById('ppos_' + teamId).value = '';
+  await loadTeams();
+}
+
+async function deletePlayer(id) {
+  await api('/api/players/delete', { id });
+  await loadTeams();
+}
+
+loadTeams();
+</script>
+</body>
+</html>

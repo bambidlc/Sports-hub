@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stream Desk - Sports Hub</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Unbounded:wght@500;700&display=swap');
+
+    :root {
+      --bg: #0b1220;
+      --panel: #111a2d;
+      --panel-2: #16223a;
+      --border: rgba(255, 255, 255, 0.12);
+      --text: #f8fafc;
+      --muted: #a5b4d0;
+      --accent: #f59e0b;
+      --accent-soft: rgba(245, 158, 11, 0.18);
+      --shadow: 0 20px 36px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100vh;
+    }
+
+    .app-shell {
+      display: grid;
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .topbar {
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: grid;
+      gap: 2px;
+    }
+
+    .brand-title {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+    }
+
+    .brand-subtitle {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: rgba(148, 163, 184, 0.15);
+    }
+
+    .status-pill.live {
+      color: #bbf7d0;
+      background: rgba(34, 197, 94, 0.2);
+      border-color: rgba(34, 197, 94, 0.5);
+    }
+
+    .layout {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: 1.45fr 0.95fr;
+    }
+
+    .stage-panel {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      min-height: 420px;
+    }
+
+    .toolbar {
+      display: grid;
+      gap: 10px;
+    }
+
+    .toolbar-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .toolbar-title {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+    }
+
+    select, input, button {
+      font: inherit;
+    }
+
+    select, input {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      min-height: 38px;
+    }
+
+    select, .url-input {
+      min-width: 200px;
+      flex: 1;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 9px 12px;
+      min-height: 38px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text);
+      background: rgba(148, 163, 184, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: transform 120ms ease, background 120ms ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0c111f;
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-soft {
+      background: var(--accent-soft);
+      border-color: rgba(245, 158, 11, 0.35);
+      color: #fcd34d;
+    }
+
+    .btn-link {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.45);
+      color: #bfdbfe;
+    }
+
+    .stage {
+      position: relative;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #040811;
+      min-height: 300px;
+    }
+
+    .stage video, .stage iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: none;
+      background: #000;
+      object-fit: cover;
+      min-height: 300px;
+    }
+
+    .stage .visible {
+      display: block;
+    }
+
+    .stage-hint {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 16px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      background: rgba(11, 18, 32, 0.72);
+      pointer-events: none;
+    }
+
+    .overlay {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      display: grid;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .overlay-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #dbeafe;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.34);
+      border-radius: 9px;
+      padding: 5px 9px;
+      backdrop-filter: blur(2px);
+    }
+
+    .overlay-board {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      border-radius: 10px;
+      backdrop-filter: blur(2px);
+    }
+
+    .overlay-team {
+      display: grid;
+      justify-items: center;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .overlay-team-name {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #cbd5e1;
+      width: 100%;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .overlay-score {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 1.6rem;
+      line-height: 1;
+      color: #f8fafc;
+    }
+
+    .overlay-center {
+      display: grid;
+      justify-items: center;
+      gap: 2px;
+      padding: 0 8px;
+    }
+
+    .overlay-period {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 1rem;
+      color: #fcd34d;
+    }
+
+    .overlay-clock {
+      font-size: 0.8rem;
+      color: #e0f2fe;
+      font-weight: 500;
+    }
+
+    .sidebar {
+      display: grid;
+      gap: 14px;
+    }
+
+    .score-panel {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .score-team {
+      display: grid;
+      gap: 4px;
+      text-align: center;
+    }
+
+    .score-team-name {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .score-value {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 2rem;
+    }
+
+    .score-vs {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .score-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .score-btn {
+      padding: 10px;
+      font-size: 0.9rem;
+      background: rgba(0, 210, 255, 0.15);
+      border-color: rgba(0, 210, 255, 0.3);
+      color: #7dd3fc;
+    }
+
+    .period-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .period-btn {
+      flex: 1;
+      min-width: 50px;
+      padding: 8px;
+      font-size: 0.8rem;
+    }
+
+    .period-btn.active {
+      background: var(--accent);
+      color: #0c111f;
+    }
+
+    .clock-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .clock-display {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 1.4rem;
+      color: #7dd3fc;
+      text-align: center;
+    }
+
+    .overlay-toggle {
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toggle-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: rgba(148, 163, 184, 0.25);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .toggle-switch.on {
+      background: rgba(34, 197, 94, 0.5);
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: #f8fafc;
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+    }
+
+    .toggle-switch.on::after {
+      transform: translateX(20px);
+    }
+
+    .nav-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+
+    .nav-link:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="panel topbar">
+      <div class="brand">
+        <div class="brand-title">STREAM DESK</div>
+        <div class="brand-subtitle"><a href="/" class="nav-link">← Dashboard</a> | <a href="/scoreboard" class="nav-link">Scoreboard</a></div>
+      </div>
+      <div class="status-pill" id="statusPill">
+        <span class="status-dot">●</span>
+        <span id="statusText">Preparing</span>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="panel stage-panel">
+        <div class="toolbar">
+          <div class="toolbar-title">Video Source</div>
+          <div class="toolbar-row">
+            <select id="sourceType">
+              <option value="camera">Camera / Webcam</option>
+              <option value="screen">Screen Share</option>
+              <option value="url">Stream URL</option>
+              <option value="none">None (Overlay Only)</option>
+            </select>
+            <input type="text" id="streamUrl" class="url-input" placeholder="Enter stream URL (RTMP, HLS, etc.)" disabled />
+          </div>
+          <div class="toolbar-row">
+            <button class="btn-primary" id="startStreamBtn" onclick="startStream()">Start Stream</button>
+            <button id="stopStreamBtn" onclick="stopStream()" disabled>Stop Stream</button>
+            <button class="btn-link" onclick="openOverlay()">Open Overlay</button>
+            <button class="btn-soft" onclick="copyOverlayUrl()">Copy Overlay URL</button>
+          </div>
+        </div>
+
+        <div class="stage" id="stage">
+          <video id="videoElement" autoplay muted playsinline></video>
+          <iframe id="iframeElement" allowfullscreen></iframe>
+          <div class="stage-hint" id="stageHint">
+            Select a video source and click "Start Stream" to begin
+          </div>
+          
+          <div class="overlay" id="scoreOverlay">
+            <div class="overlay-head">
+              <span id="overlaySport">🏀 BASKETBALL</span>
+              <span id="overlayTime">LIVE</span>
+            </div>
+            <div class="overlay-board">
+              <div class="overlay-team">
+                <div class="overlay-team-name" id="overlayHomeName">HOME</div>
+                <div class="overlay-score" id="overlayHomeScore">0</div>
+              </div>
+              <div class="overlay-center">
+                <div class="overlay-period" id="overlayPeriod">Q1</div>
+                <div class="overlay-clock" id="overlayClock">12:00</div>
+              </div>
+              <div class="overlay-team">
+                <div class="overlay-team-name" id="overlayAwayName">AWAY</div>
+                <div class="overlay-score" id="overlayAwayScore">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <div class="panel score-panel">
+          <div class="toolbar-title">Score Control</div>
+          <div class="score-grid">
+            <div class="score-team">
+              <div class="score-team-name" id="homeTeamName">HOME</div>
+              <div class="score-value" id="homeScore">0</div>
+            </div>
+            <div class="score-vs">VS</div>
+            <div class="score-team">
+              <div class="score-team-name" id="awayTeamName">AWAY</div>
+              <div class="score-value" id="awayScore">0</div>
+            </div>
+          </div>
+          <div class="score-controls">
+            <button class="score-btn" onclick="addScore('home', 1)">Home +1</button>
+            <button class="score-btn" onclick="addScore('away', 1)">Away +1</button>
+            <button class="score-btn" onclick="addScore('home', 2)">Home +2</button>
+            <button class="score-btn" onclick="addScore('away', 2)">Away +2</button>
+            <button class="score-btn" onclick="addScore('home', 3)">Home +3</button>
+            <button class="score-btn" onclick="addScore('away', 3)">Away +3</button>
+          </div>
+        </div>
+
+        <div class="panel score-panel">
+          <div class="toolbar-title">Period & Clock</div>
+          <div class="period-row">
+            <button class="period-btn active" id="p1" onclick="setPeriod(1)">Q1</button>
+            <button class="period-btn" id="p2" onclick="setPeriod(2)">Q2</button>
+            <button class="period-btn" id="p3" onclick="setPeriod(3)">Q3</button>
+            <button class="period-btn" id="p4" onclick="setPeriod(4)">Q4</button>
+            <button class="period-btn" id="pOT" onclick="setPeriod(5)">OT</button>
+          </div>
+          <div class="clock-row">
+            <div class="clock-display" id="clockDisplay">12:00</div>
+            <button class="btn-primary" id="clockBtn" onclick="toggleClock()">▶ Start</button>
+            <button onclick="resetClock()">Reset</button>
+          </div>
+        </div>
+
+        <div class="panel overlay-toggle">
+          <div class="toolbar-title">Overlay Settings</div>
+          <div class="toggle-row">
+            <span class="toggle-label">Show Score Overlay</span>
+            <div class="toggle-switch on" id="toggleScore" onclick="toggleSetting('score')"></div>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">Show Clock</span>
+            <div class="toggle-switch on" id="toggleClock" onclick="toggleSetting('clock')"></div>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">Show Period</span>
+            <div class="toggle-switch on" id="togglePeriod" onclick="toggleSetting('period')"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let session = null;
+    let stats = null;
+    let stream = null;
+    let clockInterval = null;
+    let clockSeconds = 720;
+    let clockRunning = false;
+    let currentPeriod = 1;
+    let overlaySettings = { score: true, clock: true, period: true };
+
+    const sourceType = document.getElementById('sourceType');
+    const streamUrl = document.getElementById('streamUrl');
+    const videoElement = document.getElementById('videoElement');
+    const iframeElement = document.getElementById('iframeElement');
+    const stageHint = document.getElementById('stageHint');
+
+    sourceType.addEventListener('change', () => {
+      streamUrl.disabled = sourceType.value !== 'url';
+    });
+
+    async function loadSession() {
+      const res = await fetch('/api/session');
+      const data = await res.json();
+      session = data.session;
+      if (session) {
+        document.getElementById('homeTeamName').textContent = session.home_team_name || 'HOME';
+        document.getElementById('awayTeamName').textContent = session.away_team_name || 'AWAY';
+        document.getElementById('overlayHomeName').textContent = session.home_team_name || 'HOME';
+        document.getElementById('overlayAwayName').textContent = session.away_team_name || 'AWAY';
+        
+        const sportIcons = {
+          basketball: '🏀', soccer: '⚽', football: '🏈',
+          volleyball: '🏐', hockey: '🏒', tennis: '🎾'
+        };
+        document.getElementById('overlaySport').textContent = 
+          (sportIcons[session.sport] || '🏀') + ' ' + (session.sport || 'Basketball').toUpperCase();
+        
+        clockSeconds = session.clock_seconds || 720;
+        currentPeriod = session.period || 1;
+        updateClockDisplay();
+        updatePeriodButtons();
+      }
+    }
+
+    async function loadStats() {
+      const res = await fetch('/api/stats');
+      stats = await res.json();
+      document.getElementById('homeScore').textContent = stats.home_score || 0;
+      document.getElementById('awayScore').textContent = stats.away_score || 0;
+      document.getElementById('overlayHomeScore').textContent = stats.home_score || 0;
+      document.getElementById('overlayAwayScore').textContent = stats.away_score || 0;
+    }
+
+    async function addScore(team, points) {
+      await fetch('/api/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_type: 'score',
+          team: team,
+          points: points,
+          player_name: team === 'home' ? (session?.home_team_name || 'Home') : (session?.away_team_name || 'Away'),
+          period: currentPeriod
+        })
+      });
+      await loadStats();
+    }
+
+    async function startStream() {
+      const type = sourceType.value;
+      const statusPill = document.getElementById('statusPill');
+      const statusText = document.getElementById('statusText');
+      
+      try {
+        if (type === 'camera') {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          videoElement.srcObject = stream;
+          videoElement.classList.add('visible');
+          stageHint.style.display = 'none';
+        } else if (type === 'screen') {
+          stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+          videoElement.srcObject = stream;
+          videoElement.classList.add('visible');
+          stageHint.style.display = 'none';
+        } else if (type === 'url') {
+          const url = streamUrl.value;
+          if (!url) {
+            alert('Please enter a stream URL');
+            return;
+          }
+          iframeElement.src = url;
+          iframeElement.classList.add('visible');
+          stageHint.style.display = 'none';
+        }
+        
+        statusPill.classList.add('live');
+        statusText.textContent = 'LIVE';
+        document.getElementById('startStreamBtn').disabled = true;
+        document.getElementById('stopStreamBtn').disabled = false;
+      } catch (err) {
+        console.error('Stream error:', err);
+        alert('Failed to start stream: ' + err.message);
+      }
+    }
+
+    function stopStream() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+      videoElement.srcObject = null;
+      videoElement.classList.remove('visible');
+      iframeElement.src = '';
+      iframeElement.classList.remove('visible');
+      stageHint.style.display = 'grid';
+      
+      document.getElementById('statusPill').classList.remove('live');
+      document.getElementById('statusText').textContent = 'Stopped';
+      document.getElementById('startStreamBtn').disabled = false;
+      document.getElementById('stopStreamBtn').disabled = true;
+    }
+
+    function openOverlay() {
+      window.open('/overlay', 'overlay', 'width=1920,height=1080');
+    }
+
+    function copyOverlayUrl() {
+      const url = window.location.origin + '/overlay';
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Overlay URL copied: ' + url);
+      });
+    }
+
+    // Clock functions
+    function updateClockDisplay() {
+      const mins = Math.floor(clockSeconds / 60);
+      const secs = clockSeconds % 60;
+      const display = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      document.getElementById('clockDisplay').textContent = display;
+      document.getElementById('overlayClock').textContent = display;
+    }
+
+    function toggleClock() {
+      clockRunning = !clockRunning;
+      const btn = document.getElementById('clockBtn');
+      
+      if (clockRunning) {
+        btn.textContent = '⏸ Pause';
+        clockInterval = setInterval(() => {
+          if (clockSeconds > 0) {
+            clockSeconds--;
+            updateClockDisplay();
+            saveClockState();
+          } else {
+            toggleClock();
+          }
+        }, 1000);
+      } else {
+        btn.textContent = '▶ Start';
+        clearInterval(clockInterval);
+      }
+    }
+
+    function resetClock() {
+      clockRunning = false;
+      clearInterval(clockInterval);
+      clockSeconds = 720;
+      updateClockDisplay();
+      document.getElementById('clockBtn').textContent = '▶ Start';
+      saveClockState();
+    }
+
+    async function saveClockState() {
+      await fetch('/api/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clock_seconds: clockSeconds,
+          clock_running: clockRunning,
+          period: currentPeriod
+        })
+      });
+    }
+
+    function setPeriod(p) {
+      currentPeriod = p;
+      updatePeriodButtons();
+      const periodNames = ['Q1', 'Q2', 'Q3', 'Q4', 'OT'];
+      document.getElementById('overlayPeriod').textContent = periodNames[p - 1];
+      saveClockState();
+    }
+
+    function updatePeriodButtons() {
+      document.querySelectorAll('.period-btn').forEach((btn, i) => {
+        btn.classList.remove('active');
+      });
+      const periodMap = { 1: 'p1', 2: 'p2', 3: 'p3', 4: 'p4', 5: 'pOT' };
+      document.getElementById(periodMap[currentPeriod])?.classList.add('active');
+      const periodNames = ['Q1', 'Q2', 'Q3', 'Q4', 'OT'];
+      document.getElementById('overlayPeriod').textContent = periodNames[currentPeriod - 1];
+    }
+
+    function toggleSetting(setting) {
+      overlaySettings[setting] = !overlaySettings[setting];
+      const toggle = document.getElementById('toggle' + setting.charAt(0).toUpperCase() + setting.slice(1));
+      toggle.classList.toggle('on', overlaySettings[setting]);
+      
+      if (setting === 'score') {
+        document.getElementById('scoreOverlay').style.display = overlaySettings[setting] ? 'grid' : 'none';
+      } else if (setting === 'clock') {
+        document.getElementById('overlayClock').style.display = overlaySettings[setting] ? 'block' : 'none';
+      } else if (setting === 'period') {
+        document.getElementById('overlayPeriod').style.display = overlaySettings[setting] ? 'block' : 'none';
+      }
+    }
+
+    // Initialize
+    loadSession();
+    loadStats();
+    
+    // Refresh stats periodically
+    setInterval(loadStats, 3000);
+  </script>
+</body>
+</html>

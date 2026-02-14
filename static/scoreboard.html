@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Live Score - Sports Hub</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Unbounded:wght@500;700&display=swap');
+
+    :root {
+      --bg: #0a0f15;
+      --panel: #111826;
+      --panel-2: #0c121d;
+      --accent: #ffb100;
+      --accent-2: #00d2ff;
+      --text: #eef3ff;
+      --muted: #96a6bb;
+      --danger: #ff5d5d;
+      --success: #22c55e;
+      --shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "Avenir Next", "Futura", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(0,210,255,0.15), transparent 45%),
+        radial-gradient(circle at 90% 10%, rgba(255,177,0,0.18), transparent 40%),
+        linear-gradient(160deg, #0a0f15 0%, #070b11 100%);
+      min-height: 100vh;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: minmax(280px, 320px) 1fr minmax(280px, 360px);
+      gap: 16px;
+      padding: 16px;
+      min-height: 100vh;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, rgba(17,24,38,0.95), rgba(10,14,22,0.92));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    /* Scoreboard */
+    .scoreboard {
+      display: grid;
+      gap: 16px;
+    }
+
+    .score-banner {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      background: rgba(10,16,26,0.7);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .team-block {
+      display: grid;
+      gap: 6px;
+      justify-items: center;
+    }
+
+    .team-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+    }
+
+    .team-name {
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .score {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 2.5rem;
+      letter-spacing: 0.08em;
+    }
+
+    .score-controls {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .score-controls button {
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      background: rgba(0,210,255,0.15);
+      color: var(--accent-2);
+      border: 1px solid rgba(0,210,255,0.3);
+    }
+
+    .score-controls button:hover {
+      background: rgba(0,210,255,0.25);
+    }
+
+    /* Clock */
+    .clock {
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+      padding: 12px;
+    }
+
+    .clock-time {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 2rem;
+      color: var(--accent-2);
+    }
+
+    .clock-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Periods */
+    .periods {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .periods button {
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+    }
+
+    .periods button.active {
+      background: var(--accent-2);
+      color: #0b0f14;
+    }
+
+    /* Players */
+    .team-section {
+      display: grid;
+      gap: 10px;
+    }
+
+    .team-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+
+    .add-player {
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border-radius: 6px;
+    }
+
+    .players-list {
+      display: grid;
+      gap: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .player-row {
+      display: grid;
+      grid-template-columns: 40px 1fr auto auto auto;
+      gap: 8px;
+      align-items: center;
+      background: rgba(9, 14, 22, 0.7);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .player-row:hover {
+      border-color: rgba(255,255,255,0.15);
+    }
+
+    .player-row.selected {
+      border-color: var(--accent-2);
+      background: rgba(0, 210, 255, 0.1);
+    }
+
+    .player-number {
+      font-family: "Unbounded", "Space Grotesk", sans-serif;
+      font-size: 1rem;
+      text-align: center;
+      color: var(--accent);
+    }
+
+    .player-name {
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-stat {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+      min-width: 30px;
+    }
+
+    /* Actions */
+    .action-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .action-buttons button {
+      padding: 14px 8px;
+      font-size: 0.9rem;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .btn-score {
+      background: rgba(0,210,255,0.18);
+      color: var(--accent-2);
+    }
+
+    .btn-foul {
+      background: rgba(255,93,93,0.18);
+      color: var(--danger);
+    }
+
+    .btn-assist {
+      background: rgba(34,197,94,0.18);
+      color: var(--success);
+    }
+
+    .btn-rebound {
+      background: rgba(255,177,0,0.18);
+      color: var(--accent);
+    }
+
+    /* Events */
+    .events-list {
+      display: grid;
+      gap: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .event-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: rgba(9, 14, 22, 0.5);
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+
+    .event-row .time {
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .event-row .delete-btn {
+      margin-left: auto;
+      padding: 2px 8px;
+      font-size: 0.7rem;
+      background: rgba(255,93,93,0.15);
+      color: var(--danger);
+      border-radius: 4px;
+    }
+
+    /* Buttons */
+    button {
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      transition: transform 0.1s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .primary {
+      background: linear-gradient(120deg, var(--accent), #ff7a00);
+      color: #0b0f14;
+    }
+
+    .secondary {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: grid;
+      place-items: center;
+      z-index: 100;
+    }
+
+    .modal {
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 20px;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .modal h3 {
+      margin: 0 0 16px;
+    }
+
+    .modal form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    input, select {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      width: 100%;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid rgba(0,210,255,0.35);
+      outline-offset: 2px;
+    }
+
+    .hidden { display: none !important; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Nav */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .nav a {
+      color: var(--accent-2);
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+
+    .nav a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Left Panel: Home Team -->
+    <div class="panel">
+      <div class="nav">
+        <h2 class="title">Home Team</h2>
+        <a href="/"">← Dashboard</a>
+      </div>
+      <div class="team-header">
+        <span id="homeTeamLabel">HOME TEAM</span>
+        <button class="add-player" onclick="showAddPlayer('home')">+ Add Player</button>
+      </div>
+      <div class="players-list" id="homePlayers"></div>
+    </div>
+
+    <!-- Center Panel: Scoreboard -->
+    <div class="panel">
+      <h2 class="title">Scoreboard</h2>
+      
+      <div class="score-banner">
+        <div class="team-block">
+          <div class="team-label">HOME</div>
+          <div class="team-name" id="homeTeamName">Home</div>
+          <div class="score" id="homeScore">0</div>
+          <div class="score-controls">
+            <button onclick="addScore('home', 1)">+1</button>
+            <button onclick="addScore('home', 2)">+2</button>
+            <button onclick="addScore('home', 3)">+3</button>
+          </div>
+        </div>
+        <div class="clock">
+          <div class="clock-time" id="clockDisplay">12:00</div>
+          <div class="clock-controls">
+            <button class="primary" id="clockToggle" onclick="toggleClock()">▶ Start</button>
+            <button class="secondary" onclick="resetClock()">Reset</button>
+          </div>
+          <div class="periods">
+            <button id="period1" class="active" onclick="setPeriod(1)">Q1</button>
+            <button id="period2" onclick="setPeriod(2)">Q2</button>
+            <button id="period3" onclick="setPeriod(3)">Q3</button>
+            <button id="period4" onclick="setPeriod(4)">Q4</button>
+            <button id="periodOT" onclick="setPeriod(5)">OT</button>
+          </div>
+        </div>
+        <div class="team-block">
+          <div class="team-label">AWAY</div>
+          <div class="team-name" id="awayTeamName">Away</div>
+          <div class="score" id="awayScore">0</div>
+          <div class="score-controls">
+            <button onclick="addScore('away', 1)">+1</button>
+            <button onclick="addScore('away', 2)">+2</button>
+            <button onclick="addScore('away', 3)">+3</button>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="title">Quick Actions</h3>
+      <p style="color: var(--muted); font-size: 0.85rem;">Select a player first, then use these actions:</p>
+      <div class="action-buttons">
+        <button class="btn-score" onclick="recordEvent('score', 1)">+1 Pt</button>
+        <button class="btn-score" onclick="recordEvent('score', 2)">+2 Pts</button>
+        <button class="btn-score" onclick="recordEvent('score', 3)">+3 Pts</button>
+        <button class="btn-foul" onclick="recordEvent('foul')">Foul</button>
+        <button class="btn-assist" onclick="recordEvent('assist')">Assist</button>
+        <button class="btn-rebound" onclick="recordEvent('rebound')">Rebound</button>
+        <button class="secondary" onclick="undoLast()">Undo</button>
+        <button class="secondary" onclick="clearEvents()">Clear All</button>
+      </div>
+
+      <h3 class="title">Recent Events</h3>
+      <div class="events-list" id="eventsList"></div>
+    </div>
+
+    <!-- Right Panel: Away Team -->
+    <div class="panel">
+      <h2 class="title">Away Team</h2>
+      <div class="team-header">
+        <span id="awayTeamLabel">AWAY TEAM</span>
+        <button class="add-player" onclick="showAddPlayer('away')">+ Add Player</button>
+      </div>
+      <div class="players-list" id="awayPlayers"></div>
+    </div>
+  </div>
+
+  <!-- Add Player Modal -->
+  <div class="modal-overlay hidden" id="addPlayerModal">
+    <div class="modal">
+      <h3>Add Player</h3>
+      <form onsubmit="addPlayer(event)">
+        <input type="hidden" id="playerTeam" />
+        <label style="font-size: 0.85rem; color: var(--muted);">Jersey Number</label>
+        <input type="text" id="playerNumber" placeholder="#" required />
+        <label style="font-size: 0.85rem; color: var(--muted);">Player Name</label>
+        <input type="text" id="playerName" placeholder="Name" required />
+        <div class="modal-actions">
+          <button type="button" class="secondary" onclick="hideAddPlayer()">Cancel</button>
+          <button type="submit" class="primary">Add Player</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let session = null;
+    let stats = null;
+    let selectedPlayer = null;
+    let clockInterval = null;
+    let clockSeconds = 720;
+    let clockRunning = false;
+    let currentPeriod = 1;
+    let players = { home: [], away: [] };
+
+    async function loadSession() {
+      const res = await fetch('/api/session');
+      const data = await res.json();
+      session = data.session;
+      if (session) {
+        document.getElementById('homeTeamName').textContent = session.home_team_name || 'Home';
+        document.getElementById('awayTeamName').textContent = session.away_team_name || 'Away';
+        document.getElementById('homeTeamLabel').textContent = (session.home_team_name || 'HOME').toUpperCase();
+        document.getElementById('awayTeamLabel').textContent = (session.away_team_name || 'AWAY').toUpperCase();
+        clockSeconds = session.clock_seconds || 720;
+        currentPeriod = session.period || 1;
+        updateClockDisplay();
+        updatePeriodButtons();
+      }
+    }
+
+    async function loadStats() {
+      const res = await fetch('/api/stats');
+      stats = await res.json();
+      document.getElementById('homeScore').textContent = stats.home_score || 0;
+      document.getElementById('awayScore').textContent = stats.away_score || 0;
+      renderPlayers();
+    }
+
+    async function loadEvents() {
+      const res = await fetch('/api/events');
+      const data = await res.json();
+      renderEvents(data.events || []);
+    }
+
+    function renderPlayers() {
+      const homeList = document.getElementById('homePlayers');
+      const awayList = document.getElementById('awayPlayers');
+      
+      homeList.innerHTML = '';
+      awayList.innerHTML = '';
+
+      // Group players by team
+      const homePlayers = [];
+      const awayPlayers = [];
+      
+      for (const [name, pstats] of Object.entries(stats?.player_stats || {})) {
+        if (pstats.team === 'home') {
+          homePlayers.push({ name, ...pstats });
+        } else {
+          awayPlayers.push({ name, ...pstats });
+        }
+      }
+
+      // Add stored players without stats
+      players.home.forEach(p => {
+        if (!homePlayers.find(p2 => p2.name === p.name)) {
+          homePlayers.push({ ...p, points: 0, fouls: 0, assists: 0, rebounds: 0 });
+        }
+      });
+      players.away.forEach(p => {
+        if (!awayPlayers.find(p2 => p2.name === p.name)) {
+          awayPlayers.push({ ...p, points: 0, fouls: 0, assists: 0, rebounds: 0 });
+        }
+      });
+
+      homePlayers.forEach(p => {
+        const row = createPlayerRow(p, 'home');
+        homeList.appendChild(row);
+      });
+
+      awayPlayers.forEach(p => {
+        const row = createPlayerRow(p, 'away');
+        awayList.appendChild(row);
+      });
+    }
+
+    function createPlayerRow(player, team) {
+      const row = document.createElement('div');
+      row.className = 'player-row' + (selectedPlayer?.name === player.name ? ' selected' : '');
+      row.onclick = () => selectPlayer(player, team);
+      row.innerHTML = `
+        <div class="player-number">${player.number || '#'}</div>
+        <div class="player-name">${player.name}</div>
+        <div class="player-stat">${player.points || 0}pts</div>
+        <div class="player-stat">${player.fouls || 0}f</div>
+      `;
+      return row;
+    }
+
+    function selectPlayer(player, team) {
+      selectedPlayer = { ...player, team };
+      renderPlayers();
+    }
+
+    function renderEvents(events) {
+      const list = document.getElementById('eventsList');
+      list.innerHTML = '';
+      
+      events.slice(-10).reverse().forEach(e => {
+        const row = document.createElement('div');
+        row.className = 'event-row';
+        const eventText = e.event_type === 'score' ? `+${e.points} pts` : e.event_type;
+        row.innerHTML = `
+          <span class="time">${new Date(e.timestamp).toLocaleTimeString()}</span>
+          <span>${e.player_name || 'Team'}</span>
+          <span>${eventText}</span>
+          <button class="delete-btn" onclick="deleteEvent(${e.id})">✕</button>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    async function addScore(team, points) {
+      await fetch('/api/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_type: 'score',
+          team: team,
+          points: points,
+          player_name: team === 'home' ? (session?.home_team_name || 'Home') : (session?.away_team_name || 'Away'),
+          period: currentPeriod
+        })
+      });
+      await loadStats();
+      await loadEvents();
+    }
+
+    async function recordEvent(type, points = 0) {
+      if (!selectedPlayer) {
+        alert('Please select a player first');
+        return;
+      }
+      
+      await fetch('/api/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_type: type,
+          team: selectedPlayer.team,
+          player_name: selectedPlayer.name,
+          player_number: selectedPlayer.number,
+          points: points,
+          period: currentPeriod
+        })
+      });
+      
+      await loadStats();
+      await loadEvents();
+    }
+
+    async function deleteEvent(id) {
+      await fetch('/api/event/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      await loadStats();
+      await loadEvents();
+    }
+
+    async function undoLast() {
+      const res = await fetch('/api/events');
+      const data = await res.json();
+      const events = data.events || [];
+      if (events.length > 0) {
+        await deleteEvent(events[events.length - 1].id);
+      }
+    }
+
+    async function clearEvents() {
+      if (!confirm('Clear all events?')) return;
+      await fetch('/api/event/clear', { method: 'POST' });
+      await loadStats();
+      await loadEvents();
+    }
+
+    // Clock functions
+    function updateClockDisplay() {
+      const mins = Math.floor(clockSeconds / 60);
+      const secs = clockSeconds % 60;
+      document.getElementById('clockDisplay').textContent = 
+        `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function toggleClock() {
+      clockRunning = !clockRunning;
+      const btn = document.getElementById('clockToggle');
+      
+      if (clockRunning) {
+        btn.textContent = '⏸ Pause';
+        clockInterval = setInterval(() => {
+          if (clockSeconds > 0) {
+            clockSeconds--;
+            updateClockDisplay();
+            saveClockState();
+          } else {
+            toggleClock();
+          }
+        }, 1000);
+      } else {
+        btn.textContent = '▶ Start';
+        clearInterval(clockInterval);
+      }
+    }
+
+    function resetClock() {
+      clockRunning = false;
+      clearInterval(clockInterval);
+      clockSeconds = 720;
+      updateClockDisplay();
+      document.getElementById('clockToggle').textContent = '▶ Start';
+      saveClockState();
+    }
+
+    async function saveClockState() {
+      await fetch('/api/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clock_seconds: clockSeconds,
+          clock_running: clockRunning,
+          period: currentPeriod
+        })
+      });
+    }
+
+    function setPeriod(p) {
+      currentPeriod = p;
+      updatePeriodButtons();
+      saveClockState();
+    }
+
+    function updatePeriodButtons() {
+      document.querySelectorAll('.periods button').forEach((btn, i) => {
+        btn.classList.remove('active');
+      });
+      const periodMap = { 1: 'period1', 2: 'period2', 3: 'period3', 4: 'period4', 5: 'periodOT' };
+      document.getElementById(periodMap[currentPeriod])?.classList.add('active');
+    }
+
+    // Player management
+    function showAddPlayer(team) {
+      document.getElementById('playerTeam').value = team;
+      document.getElementById('addPlayerModal').classList.remove('hidden');
+    }
+
+    function hideAddPlayer() {
+      document.getElementById('addPlayerModal').classList.add('hidden');
+      document.getElementById('playerNumber').value = '';
+      document.getElementById('playerName').value = '';
+    }
+
+    function addPlayer(e) {
+      e.preventDefault();
+      const team = document.getElementById('playerTeam').value;
+      const number = document.getElementById('playerNumber').value;
+      const name = document.getElementById('playerName').value;
+      
+      players[team].push({ number, name, team });
+      hideAddPlayer();
+      renderPlayers();
+    }
+
+    // Initialize
+    loadSession();
+    loadStats();
+    loadEvents();
+    
+    // Refresh stats periodically
+    setInterval(loadStats, 5000);
+    setInterval(loadEvents, 5000);
+  </script>
+</body>
+</html>
